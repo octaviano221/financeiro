@@ -1,1 +1,4 @@
-import './backend/src/server.js';
+import('./backend/src/server.js').catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
