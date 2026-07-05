@@ -109,6 +109,12 @@ API: `http://localhost:3333/api`
 
 ## Deploy na Hostinger ou servidor Node.js
 
+Guia completo:
+
+```txt
+HOSTINGER_DEPLOY.md
+```
+
 1. Crie um banco MySQL e importe `backend/database/schema.sql`.
 2. Suba a pasta `backend` para um servidor com Node.js.
 3. Configure as variaveis de ambiente do backend com dados reais do MySQL e um `JWT_SECRET` forte.
