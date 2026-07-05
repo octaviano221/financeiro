@@ -8,9 +8,12 @@ export function ResourcePage({ resource }) {
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
+  const [formOpen, setFormOpen] = useState(false);
+  const [relationOptions, setRelationOptions] = useState({});
 
   useEffect(() => {
     load();
+    loadOptions();
   }, [resource.endpoint]);
 
   async function load() {
@@ -18,9 +21,26 @@ export function ResourcePage({ resource }) {
     setItems(response.data);
   }
 
+  async function loadOptions() {
+    const relationEndpoints = [...new Set(resource.fields.filter((field) => field[2] === 'relation').map((field) => field[3]))];
+    const entries = await Promise.all(relationEndpoints.map(async (endpoint) => {
+      const response = await api.get(`/${endpoint}`);
+      return [endpoint, response.data];
+    }));
+    setRelationOptions(Object.fromEntries(entries));
+  }
+
   function openForm(item = {}) {
     setEditing(item.id ? item : null);
-    setForm(item);
+    const initial = Object.fromEntries(resource.fields.map(([name, , type, opts]) => {
+      if (Object.prototype.hasOwnProperty.call(item, name)) return [name, item[name] ?? ''];
+      if (type === 'checkbox') return [name, false];
+      if (type === 'select') return [name, opts[0] ?? ''];
+      if (type === 'relation') return [name, ''];
+      return [name, ''];
+    }));
+    setForm(initial);
+    setFormOpen(true);
   }
 
   async function submit(event) {
@@ -30,6 +50,7 @@ export function ResourcePage({ resource }) {
     else await api.post(`/${resource.endpoint}`, payload);
     setForm({});
     setEditing(null);
+    setFormOpen(false);
     await load();
   }
 
@@ -49,24 +70,31 @@ export function ResourcePage({ resource }) {
         <button onClick={() => openForm({})}><Plus size={16} /> {resource.action}</button>
       </div>
 
-      {Object.keys(form).length > 0 && (
+      {formOpen && (
         <form className="form-panel" onSubmit={submit}>
           <div className="form-title">
             <strong>{editing ? 'Editar registro' : resource.action}</strong>
-            <button type="button" className="icon-button" onClick={() => { setForm({}); setEditing(null); }}><X size={18} /></button>
+            <button type="button" className="icon-button" onClick={() => { setForm({}); setEditing(null); setFormOpen(false); }}><X size={18} /></button>
           </div>
           <div className="form-grid">
-            {resource.fields.map(([name, label, type = 'text', options]) => (
+            {resource.fields.map(([name, label, type = 'text', fieldOptions]) => (
               <label key={name} className={type === 'textarea' ? 'span-2' : ''}>
                 <span>{label}</span>
                 {type === 'select' ? (
                   <select value={form[name] ?? ''} onChange={(e) => setForm({ ...form, [name]: e.target.value })}>
-                    {options.map((option) => <option key={option} value={option}>{option || 'Nenhum'}</option>)}
+                    {fieldOptions.map((option) => <option key={option} value={option}>{option || 'Nenhum'}</option>)}
                   </select>
                 ) : type === 'textarea' ? (
                   <textarea value={form[name] ?? ''} onChange={(e) => setForm({ ...form, [name]: e.target.value })} />
                 ) : type === 'checkbox' ? (
                   <input type="checkbox" checked={Boolean(form[name])} onChange={(e) => setForm({ ...form, [name]: e.target.checked })} />
+                ) : type === 'relation' ? (
+                  <select value={form[name] ?? ''} onChange={(e) => setForm({ ...form, [name]: e.target.value })}>
+                    <option value="">Selecione</option>
+                    {(relationOptions[fieldOptions] || []).map((option) => (
+                      <option key={option.id} value={option.id}>{relationLabel(option)}</option>
+                    ))}
+                  </select>
                 ) : (
                   <input type={type} value={form[name] ?? ''} onChange={(e) => setForm({ ...form, [name]: e.target.value })} />
                 )}
@@ -101,6 +129,10 @@ export function ResourcePage({ resource }) {
       </div>
     </section>
   );
+}
+
+function relationLabel(item) {
+  return item.name || item.bank_name || item.card_name || item.description || item.goal_name || `Registro ${item.id}`;
 }
 
 function formatCell(value) {

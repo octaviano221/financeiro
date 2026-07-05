@@ -7,6 +7,9 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 import crudRoutes from './routes/crud.routes.js';
 import actionPlanRoutes from './routes/actionPlan.routes.js';
 import reportRoutes from './routes/report.routes.js';
+import financeToolsRoutes from './routes/financeTools.routes.js';
+import settingsRoutes from './routes/settings.routes.js';
+import demoRoutes from './routes/demo.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 export function createApp() {
@@ -22,6 +25,9 @@ export function createApp() {
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/action-plan', actionPlanRoutes);
   app.use('/api/reports', reportRoutes);
+  app.use('/api/tools', financeToolsRoutes);
+  app.use('/api/settings', settingsRoutes);
+  app.use('/api/demo', demoRoutes);
   app.use('/api', crudRoutes);
 
   app.use((req, res) => res.status(404).json({ message: 'Rota nao encontrada' }));

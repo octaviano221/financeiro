@@ -61,6 +61,23 @@ export const resources = [
     ]
   },
   {
+    path: 'compras-cartao',
+    endpoint: 'card-transactions',
+    title: 'Compras no Cartao',
+    action: 'Nova compra',
+    columns: ['description', 'amount', 'purchase_date', 'installments', 'current_installment', 'status'],
+    fields: [
+      ['credit_card_id', 'Cartao', 'relation', 'credit-cards'],
+      ['description', 'Descricao'],
+      ['amount', 'Valor total', 'number'],
+      ['purchase_date', 'Data da compra', 'date'],
+      ['installments', 'Parcelas', 'number'],
+      ['current_installment', 'Parcela atual', 'number'],
+      ['category_id', 'Categoria', 'relation', 'categories'],
+      ['status', 'Status', 'select', ['aberta', 'paga', 'cancelada']]
+    ]
+  },
+  {
     path: 'receitas',
     endpoint: 'incomes',
     title: 'Receitas',
@@ -70,8 +87,8 @@ export const resources = [
       ['description', 'Descricao'],
       ['amount', 'Valor', 'number'],
       ['received_date', 'Data de recebimento', 'date'],
-      ['category_id', 'Categoria ID', 'number'],
-      ['bank_account_id', 'Conta bancaria ID', 'number'],
+      ['category_id', 'Categoria', 'relation', 'categories'],
+      ['bank_account_id', 'Conta bancaria', 'relation', 'bank-accounts'],
       ['is_recurring', 'Recorrente?', 'checkbox'],
       ['recurrence_type', 'Frequencia', 'select', ['', 'mensal', 'semanal', 'quinzenal', 'anual']],
       ['status', 'Status', 'select', ['recebido', 'previsto', 'atrasado']]
@@ -88,8 +105,8 @@ export const resources = [
       ['amount', 'Valor', 'number'],
       ['due_date', 'Vencimento', 'date'],
       ['payment_date', 'Pagamento', 'date'],
-      ['category_id', 'Categoria ID', 'number'],
-      ['bank_account_id', 'Conta bancaria ID', 'number'],
+      ['category_id', 'Categoria', 'relation', 'categories'],
+      ['bank_account_id', 'Conta bancaria', 'relation', 'bank-accounts'],
       ['is_recurring', 'Recorrente?', 'checkbox'],
       ['recurrence_type', 'Frequencia', 'select', ['', 'mensal', 'semanal', 'quinzenal', 'anual']],
       ['status', 'Status', 'select', ['aberto', 'pago', 'vencido', 'cancelado']],

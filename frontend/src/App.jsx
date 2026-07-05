@@ -7,6 +7,9 @@ import { ResourcePage } from './pages/ResourcePage.jsx';
 import { ActionPlanPage } from './pages/ActionPlanPage.jsx';
 import { ReportsPage } from './pages/ReportsPage.jsx';
 import { SettingsPage } from './pages/SettingsPage.jsx';
+import { CashFlowPage } from './pages/CashFlowPage.jsx';
+import { CalendarPage } from './pages/CalendarPage.jsx';
+import { SimulatorPage } from './pages/SimulatorPage.jsx';
 import { resources } from './resources.js';
 
 function PrivateRoute({ children }) {
@@ -24,7 +27,10 @@ export default function App() {
         {resources.map((resource) => (
           <Route key={resource.path} path={resource.path} element={<ResourcePage resource={resource} />} />
         ))}
+        <Route path="fluxo-de-caixa" element={<CashFlowPage />} />
         <Route path="plano-de-acao" element={<ActionPlanPage />} />
+        <Route path="simulador" element={<SimulatorPage />} />
+        <Route path="calendario" element={<CalendarPage />} />
         <Route path="relatorios" element={<ReportsPage />} />
         <Route path="configuracoes" element={<SettingsPage />} />
       </Route>

@@ -1,16 +1,20 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { BarChart3, Bell, Building2, CalendarDays, ChevronDown, CreditCard, Flag, Gauge, Home, LogOut, Mail, Menu, Moon, Receipt, Search, Settings, Target, WalletCards } from 'lucide-react';
+import { BarChart3, Bell, Building2, CalendarDays, ChevronDown, CreditCard, Flag, Gauge, Home, LineChart, LogOut, Mail, Menu, Moon, Receipt, Search, Settings, Target, WalletCards } from 'lucide-react';
 import { useAuth } from '../state/AuthContext.jsx';
 
 const nav = [
   ['/', 'Dashboard', Home],
   ['/bancos', 'Bancos', Building2],
   ['/cartoes', 'Cartoes', CreditCard],
+  ['/compras-cartao', 'Compras Cartao', CreditCard],
   ['/dividas', 'Dividas', Receipt],
   ['/receitas', 'Receitas', WalletCards],
   ['/despesas', 'Despesas', Bell],
+  ['/fluxo-de-caixa', 'Fluxo de Caixa', LineChart],
   ['/plano-de-acao', 'Plano', Flag],
   ['/metas', 'Metas', Target],
+  ['/simulador', 'Simulador', Gauge],
+  ['/calendario', 'Calendario', CalendarDays],
   ['/relatorios', 'Relatorios', BarChart3],
   ['/categorias', 'Categorias', CalendarDays],
   ['/configuracoes', 'Configuracoes', Settings]

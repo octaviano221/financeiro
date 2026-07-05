@@ -12,7 +12,13 @@ Sistema web MVP para gestao financeira pessoal/empresarial, com Node.js, Express
 - Alertas inteligentes calculados automaticamente
 - Graficos de entradas x saidas, dividas e gastos por categoria
 - Geracao de plano de acao com estrategias Avalanche, Bola de Neve, Emergencial e Personalizada
-- Relatorios base em JSON para evoluir para PDF/Excel
+- Fluxo de caixa com comparativo previsto x realizado
+- Calendario financeiro mensal/semanal/lista
+- Simulador de renegociacao com calculo de parcela, total final e economia
+- Configuracoes persistidas por usuario
+- Compras parceladas no cartao com geracao automatica de parcelas futuras
+- Relatorios visuais de resumo mensal, dividas e cartoes
+- Seed de dados demonstrativos para preencher o dashboard
 - Schema SQL MySQL completo
 
 ## Estrutura
@@ -38,6 +44,12 @@ frontend/
 
 ```bash
 mysql -u root -p < backend/database/schema.sql
+```
+
+Se voce ja importou o banco antes desta versao, rode tambem:
+
+```bash
+mysql -u root -p < backend/database/002_user_settings.sql
 ```
 
 2. Configure o backend:
@@ -75,6 +87,14 @@ API: `http://localhost:3333/api`
 - `POST /api/action-plan/generate`
 - `GET /api/action-plan`
 - `GET /api/reports/monthly`
+- `GET /api/reports/debts`
+- `GET /api/reports/cards`
+- `GET /api/tools/cash-flow`
+- `GET /api/tools/calendar`
+- `POST /api/tools/renegotiation/simulate`
+- `GET /api/settings`
+- `PUT /api/settings`
+- `POST /api/demo/seed`
 
 ## Deploy na Hostinger ou servidor Node.js
 
