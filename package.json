@@ -5,7 +5,9 @@
   "scripts": {
     "install:all": "npm install --prefix backend && npm install --prefix frontend",
     "dev:backend": "npm run dev --prefix backend",
-    "dev:frontend": "npm run dev --prefix frontend"
+    "dev:frontend": "npm run dev --prefix frontend",
+    "start": "node server.js",
+    "postinstall": "npm install --prefix backend --omit=dev"
   },
   "workspaces": [
     "backend",
