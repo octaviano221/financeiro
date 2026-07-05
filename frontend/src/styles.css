@@ -407,3 +407,56 @@ pre { white-space: pre-wrap; background: #0f172a; color: #e2e8f0; padding: 18px;
   .quick-action-bar { align-items: stretch; }
   .quick-action-bar a { width: 100%; justify-content: center; }
 }
+
+.success-box { color: #166534; background: #dcfce7; padding: 10px; border-radius: 8px; font-size: 13px; word-break: break-word; }
+.export-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.export-row button {
+  background: #eef2ff;
+  color: #1d4ed8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-weight: 800;
+}
+
+.dark-theme {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+.dark-theme .app-shell,
+.dark-theme .content,
+.dark-theme .auth-page { background: #0f172a; }
+.dark-theme .sidebar,
+.dark-theme .topbar,
+.dark-theme .panel,
+.dark-theme .metric-card,
+.dark-theme .form-panel,
+.dark-theme .table-wrap,
+.dark-theme .quick-action-bar,
+.dark-theme .status-strip,
+.dark-theme .auth-panel {
+  background: #111827;
+  border-color: #243044;
+  color: #e5e7eb;
+}
+.dark-theme input,
+.dark-theme select,
+.dark-theme textarea,
+.dark-theme .top-search {
+  background: #0b1220;
+  border-color: #334155;
+  color: #e5e7eb;
+}
+.dark-theme p,
+.dark-theme small,
+.dark-theme .topbar span,
+.dark-theme .sidebar a,
+.dark-theme .alert span {
+  color: #a8b3c7;
+}
+.dark-theme .alert,
+.dark-theme .due-list div,
+.dark-theme .calendar-event,
+.dark-theme .metric-grid.small div {
+  background: #0b1220;
+  border-color: #243044;
+}

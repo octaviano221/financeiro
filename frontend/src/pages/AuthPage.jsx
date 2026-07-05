@@ -2,23 +2,35 @@ import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Landmark } from 'lucide-react';
 import { useAuth } from '../state/AuthContext.jsx';
+import { api } from '../api/client.js';
 
 export function AuthPage() {
   const { user, login, register } = useAuth();
   const [mode, setMode] = useState('login');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', profile_type: 'pessoal' });
+  const [reset, setReset] = useState({ token: '', password: '' });
 
   if (user) return <Navigate to="/" replace />;
 
   async function submit(event) {
     event.preventDefault();
     setError('');
+    setInfo('');
     try {
       if (mode === 'login') await login(form.email, form.password);
-      else await register(form);
+      else if (mode === 'register') await register(form);
+      else if (mode === 'forgot') {
+        const response = await api.post('/password/forgot', { email: form.email });
+        setInfo(`${response.data.message}${response.data.reset_token ? ` Token: ${response.data.reset_token}` : ''}`);
+      } else if (mode === 'reset') {
+        await api.post('/password/reset', reset);
+        setInfo('Senha alterada. Entre com a nova senha.');
+        setMode('login');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Nao foi possivel entrar');
+      setError(err.response?.data?.message || 'Nao foi possivel concluir');
     }
   }
 
@@ -26,7 +38,7 @@ export function AuthPage() {
     <div className="auth-page">
       <section className="auth-panel">
         <div className="auth-brand"><Landmark size={34} /><strong>Gestao Financeira Inteligente</strong></div>
-        <h1>{mode === 'login' ? 'Acesse sua conta' : 'Crie sua conta'}</h1>
+        <h1>{mode === 'login' ? 'Acesse sua conta' : mode === 'register' ? 'Crie sua conta' : mode === 'forgot' ? 'Recuperar senha' : 'Nova senha'}</h1>
         <form onSubmit={submit}>
           {mode === 'register' && (
             <>
@@ -39,14 +51,23 @@ export function AuthPage() {
               </select>
             </>
           )}
-          <input type="email" placeholder="E-mail" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-          <input type="password" placeholder="Senha" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+          {mode !== 'reset' && <input type="email" placeholder="E-mail" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />}
+          {['login', 'register'].includes(mode) && <input type="password" placeholder="Senha" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />}
+          {mode === 'reset' && (
+            <>
+              <input placeholder="Token recebido" value={reset.token} onChange={(e) => setReset({ ...reset, token: e.target.value })} required />
+              <input type="password" placeholder="Nova senha" value={reset.password} onChange={(e) => setReset({ ...reset, password: e.target.value })} required />
+            </>
+          )}
           {error && <div className="error">{error}</div>}
-          <button type="submit">{mode === 'login' ? 'Entrar' : 'Cadastrar'}</button>
+          {info && <div className="success-box">{info}</div>}
+          <button type="submit">{mode === 'login' ? 'Entrar' : mode === 'register' ? 'Cadastrar' : mode === 'forgot' ? 'Gerar token' : 'Alterar senha'}</button>
         </form>
         <button className="link-button" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
           {mode === 'login' ? 'Criar nova conta' : 'Ja tenho cadastro'}
         </button>
+        {mode === 'login' && <button className="link-button" onClick={() => setMode('forgot')}>Esqueci minha senha</button>}
+        {mode === 'forgot' && <button className="link-button" onClick={() => setMode('reset')}>Ja tenho token</button>}
       </section>
     </div>
   );

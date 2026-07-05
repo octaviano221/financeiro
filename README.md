@@ -19,6 +19,11 @@ Sistema web MVP para gestao financeira pessoal/empresarial, com Node.js, Express
 - Compras parceladas no cartao com geracao automatica de parcelas futuras
 - Relatorios visuais de resumo mensal, dividas e cartoes
 - Seed de dados demonstrativos para preencher o dashboard
+- Registro de pagamento com baixa de despesa, divida e fatura
+- Exportacao CSV de receitas, despesas, dividas e cartoes
+- Geracao de PDF via impressao do navegador
+- Recuperacao de senha por token, pronta para plugar envio de e-mail em producao
+- Tema escuro aplicado pela configuracao do usuario
 - Schema SQL MySQL completo
 
 ## Estrutura
@@ -50,6 +55,7 @@ Se voce ja importou o banco antes desta versao, rode tambem:
 
 ```bash
 mysql -u root -p < backend/database/002_user_settings.sql
+mysql -u root -p < backend/database/003_payments_password_reset.sql
 ```
 
 2. Configure o backend:
@@ -95,6 +101,11 @@ API: `http://localhost:3333/api`
 - `GET /api/settings`
 - `PUT /api/settings`
 - `POST /api/demo/seed`
+- `POST /api/payments/register`
+- `GET /api/payments`
+- `POST /api/password/forgot`
+- `POST /api/password/reset`
+- `GET /api/reports/export/:type`
 
 ## Deploy na Hostinger ou servidor Node.js
 
@@ -107,6 +118,15 @@ API: `http://localhost:3333/api`
 7. Rode `npm run build` em `frontend`.
 8. Publique a pasta `frontend/dist` como site estatico.
 9. Configure proxy/reverse proxy para a API, se frontend e backend estiverem no mesmo dominio.
+
+### Checklist antes de subir
+
+- Troque `JWT_SECRET` por uma chave forte.
+- Configure `FRONTEND_URL` com o dominio real.
+- Use senha forte no MySQL.
+- Importe `schema.sql` em banco novo ou rode as migrations em banco existente.
+- Configure HTTPS no dominio.
+- Teste cadastro, login, dashboard, pagamento e exportacao antes de divulgar.
 
 ## Observacao
 

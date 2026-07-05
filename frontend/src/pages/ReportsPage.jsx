@@ -13,6 +13,16 @@ export function ReportsPage() {
     api.get('/reports/cards').then((response) => setCards(response.data));
   }, []);
 
+  async function exportCsv(type) {
+    const response = await api.get(`/reports/export/${type}`, { responseType: 'blob' });
+    const url = URL.createObjectURL(response.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${type}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <section className="page">
       <div className="page-title">
@@ -23,6 +33,13 @@ export function ReportsPage() {
       </div>
       <article className="panel">
         <h2>Relatorio mensal</h2>
+        <div className="export-row">
+          <button onClick={() => exportCsv('incomes')}>Exportar receitas CSV</button>
+          <button onClick={() => exportCsv('expenses')}>Exportar despesas CSV</button>
+          <button onClick={() => exportCsv('debts')}>Exportar dividas CSV</button>
+          <button onClick={() => exportCsv('cards')}>Exportar cartoes CSV</button>
+          <button onClick={() => window.print()}>Gerar PDF pela impressao</button>
+        </div>
         {report && (
           <div className="metric-grid small">
             <div><small>Receitas</small><strong>{money.format(report.summary.monthlyIncome)}</strong></div>
