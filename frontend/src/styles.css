@@ -767,7 +767,14 @@ textarea { min-height: 96px; resize: vertical; }
 table { border-collapse: collapse; width: 100%; min-width: 760px; }
 th, td { text-align: left; padding: 13px 14px; border-bottom: 1px solid #e2e8f0; }
 th { color: #475569; font-size: 13px; background: #f8fafc; }
+th { white-space: nowrap; }
 tbody tr:hover { background: #f8fbff; }
+.empty-table-cell {
+  color: #64748b;
+  font-weight: 800;
+  padding: 22px 14px;
+  background: #fff;
+}
 .status-badge {
   display: inline-flex;
   align-items: center;

@@ -16,6 +16,7 @@ export function ResourcePage({ resource }) {
   const [search, setSearch] = useState('');
   const { showToast } = useToast();
   const { confirm } = useConfirm();
+  const columnLabels = Object.fromEntries(resource.fields.map(([name, label]) => [name, label]));
 
   useEffect(() => {
     load();
@@ -146,8 +147,8 @@ export function ResourcePage({ resource }) {
         <table>
           <thead>
             <tr>
-              {resource.columns.map((column) => <th key={column}>{column}</th>)}
-              <th>Acoes</th>
+              {resource.columns.map((column) => <th key={column}>{columnLabels[column] || prettyColumn(column)}</th>)}
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -160,8 +161,8 @@ export function ResourcePage({ resource }) {
                 </td>
               </tr>
             ))}
-            {items.length === 0 && <tr><td colSpan={resource.columns.length + 1}>Nenhum registro cadastrado.</td></tr>}
-            {items.length > 0 && filteredItems.length === 0 && <tr><td colSpan={resource.columns.length + 1}>Nenhum resultado encontrado para a busca.</td></tr>}
+            {items.length === 0 && <tr><td className="empty-table-cell" colSpan={resource.columns.length + 1}>Nenhum registro cadastrado.</td></tr>}
+            {items.length > 0 && filteredItems.length === 0 && <tr><td className="empty-table-cell" colSpan={resource.columns.length + 1}>Nenhum resultado encontrado para a busca.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -191,4 +192,15 @@ function isStatusValue(value) {
 
 function prettyText(value) {
   return String(value).replaceAll('_', ' ');
+}
+
+function prettyColumn(column) {
+  const labels = {
+    issuer: 'Emissor',
+    status: 'Status',
+    active: 'Ativa?',
+    icon: 'Ícone',
+    color: 'Cor'
+  };
+  return labels[column] || String(column).replaceAll('_', ' ');
 }
