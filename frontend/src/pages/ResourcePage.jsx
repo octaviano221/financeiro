@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Edit3, Plus, Search, Trash2, X } from 'lucide-react';
+﻿import { useEffect, useState } from 'react';
+import { Edit3, Plus, Search, Trash2, WalletCards, X } from 'lucide-react';
 import { api } from '../api/client.js';
 import { useToast } from '../state/ToastContext.jsx';
 import { useConfirm } from '../state/ConfirmContext.jsx';
@@ -143,12 +143,38 @@ export function ResourcePage({ resource }) {
         </form>
       )}
 
+      {filteredItems.length > 0 && (
+        <div className="resource-card-grid">
+          {filteredItems.map((item) => {
+            const card = buildResourceCard(item, resource, columnLabels);
+            return (
+              <article className="resource-card" key={`card-${item.id}`}>
+                <div className="resource-card-icon"><WalletCards size={20} /></div>
+                <div className="resource-card-main">
+                  <small>{resource.title}</small>
+                  <h2>{card.title}</h2>
+                  <p>{card.subtitle}</p>
+                </div>
+                <div className="resource-card-value">
+                  {card.amount && <strong>{formatCell(card.amount.value)}</strong>}
+                  {card.status && <span>{formatCell(card.status.value)}</span>}
+                </div>
+                <div className="resource-card-actions">
+                  <button className="icon-button" onClick={() => openForm(item)} aria-label="Editar"><Edit3 size={16} /></button>
+                  <button className="icon-button danger" onClick={() => remove(item.id)} aria-label="Excluir"><Trash2 size={16} /></button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
               {resource.columns.map((column) => <th key={column}>{columnLabels[column] || prettyColumn(column)}</th>)}
-              <th>Ações</th>
+              <th>Acoes</th>
             </tr>
           </thead>
           <tbody>
@@ -199,8 +225,23 @@ function prettyColumn(column) {
     issuer: 'Emissor',
     status: 'Status',
     active: 'Ativa?',
-    icon: 'Ícone',
+    icon: 'Icone',
     color: 'Cor'
   };
   return labels[column] || String(column).replaceAll('_', ' ');
+}
+
+function buildResourceCard(item, resource, columnLabels) {
+  const columns = resource.columns;
+  const titleColumn = columns[0];
+  const subtitleColumn = columns.find((column) => column !== titleColumn && !isMoneyField(column) && !isStatusValue(item[column])) || columns[1];
+  const amountColumn = columns.find((column) => isMoneyField(column) && item[column] !== null && item[column] !== undefined);
+  const statusColumn = columns.find((column) => isStatusValue(item[column]));
+
+  return {
+    title: item[titleColumn] || `Registro ${item.id}`,
+    subtitle: subtitleColumn ? `${columnLabels[subtitleColumn] || prettyColumn(subtitleColumn)}: ${prettyText(item[subtitleColumn] ?? '-')}` : 'Registro financeiro',
+    amount: amountColumn ? { label: columnLabels[amountColumn] || prettyColumn(amountColumn), value: item[amountColumn] } : null,
+    status: statusColumn ? { label: columnLabels[statusColumn] || prettyColumn(statusColumn), value: item[statusColumn] } : null
+  };
 }

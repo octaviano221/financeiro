@@ -19,8 +19,8 @@ export const resources = [
   {
     path: 'cartoes',
     endpoint: 'credit-cards',
-    title: 'Cartões',
-    action: 'Novo cartão',
+    title: 'Cartoes',
+    action: 'Novo cartao',
     columns: ['card_name', 'issuer', 'total_limit', 'used_limit', 'current_invoice_value', 'status'],
     fields: [
       ['card_name', 'Nome do cartao'],
@@ -39,8 +39,8 @@ export const resources = [
   {
     path: 'dividas',
     endpoint: 'debts',
-    title: 'Dívidas',
-    action: 'Nova dívida',
+    title: 'Dividas',
+    action: 'Nova divida',
     columns: ['debt_name', 'creditor', 'debt_type', 'current_amount', 'monthly_interest_rate', 'status', 'priority'],
     fields: [
       ['debt_name', 'Nome da divida'],
@@ -63,7 +63,7 @@ export const resources = [
   {
     path: 'compras-cartao',
     endpoint: 'card-transactions',
-    title: 'Compras no Cartão',
+    title: 'Compras no Cartao',
     action: 'Nova compra',
     columns: ['description', 'amount', 'purchase_date', 'installments', 'current_installment', 'status'],
     fields: [
