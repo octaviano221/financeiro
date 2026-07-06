@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Banknote, CalendarDays, CreditCard, HandCoins, HeartPulse, Landmark, Plus, Receipt, ShieldAlert, Target, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Banknote, CalendarDays, CreditCard, HandCoins, HeartPulse, Landmark, Plus, Receipt, ShieldAlert, ShoppingCart, Target, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api } from '../api/client.js';
 import { QuickCreateModal } from '../components/QuickCreateModal.jsx';
@@ -19,6 +19,7 @@ export function Dashboard() {
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [error, setError] = useState('');
   const [upcoming, setUpcoming] = useState([]);
+  const [nextMonth, setNextMonth] = useState(null);
   const [quickResource, setQuickResource] = useState(null);
   const { confirm } = useConfirm();
   const { showToast } = useToast();
@@ -29,12 +30,13 @@ export function Dashboard() {
 
   async function loadDashboard() {
     setError('');
-    const [summaryRes, chartsRes, alertsRes, healthRes, upcomingRes] = await Promise.allSettled([
+    const [summaryRes, chartsRes, alertsRes, healthRes, upcomingRes, nextMonthRes] = await Promise.allSettled([
       api.get('/dashboard/summary'),
       api.get('/dashboard/charts'),
       api.get('/dashboard/alerts'),
       api.get('/dashboard/financial-health'),
-      api.get('/system/upcoming')
+      api.get('/system/upcoming'),
+      api.get('/system/next-month-payables')
     ]);
 
     if (summaryRes.status === 'fulfilled') {
@@ -59,6 +61,7 @@ export function Dashboard() {
     setAlerts(alertsRes.status === 'fulfilled' ? alertsRes.value.data : []);
     setHealth(healthRes.status === 'fulfilled' ? healthRes.value.data : { score: 0, classification: 'atencao', message: 'Saude financeira indisponivel enquanto o banco nao responde.' });
     setUpcoming(upcomingRes.status === 'fulfilled' ? upcomingRes.value.data : []);
+    setNextMonth(nextMonthRes.status === 'fulfilled' ? nextMonthRes.value.data : null);
   }
 
   async function seedDemo() {
@@ -122,6 +125,7 @@ export function Dashboard() {
   const hasCategoryChart = (charts?.expensesByCategory || []).length > 0;
   const debtPriorityData = buildDebtPriorityData(charts?.debts || []);
   const planSteps = buildPlanSteps(summary);
+  const expenseResource = resources.find((resource) => resource.endpoint === 'expenses');
   const quickResources = [
     resources.find((resource) => resource.endpoint === 'incomes'),
     resources.find((resource) => resource.endpoint === 'expenses'),
@@ -253,6 +257,35 @@ export function Dashboard() {
               })}
             </div>
           ) : <EmptyPanel text="Cadastre despesas, faturas ou dividas com vencimento para listar aqui." compact />}
+        </article>
+
+        <article className="panel next-month-card">
+          <div className="panel-head">
+            <h2>Gastos do proximo mes</h2>
+            {expenseResource && <button onClick={() => setQuickResource(expenseResource)}><Plus size={15} /> Adicionar gasto</button>}
+          </div>
+          <div className="next-month-total">
+            <span><ShoppingCart size={22} /></span>
+            <div>
+              <small>{nextMonth?.label || 'Proximo mes'}</small>
+              <strong>{money.format(nextMonth?.total || 0)}</strong>
+              <em>{nextMonth?.count || 0} conta(s) previstas</em>
+            </div>
+          </div>
+          {nextMonth?.items?.length ? (
+            <div className="month-payable-list">
+              {nextMonth.items.slice(0, 6).map((item) => {
+                const date = new Date(`${String(item.due_date).slice(0, 10)}T00:00:00`);
+                return (
+                  <div key={`${item.type}-${item.id}-${item.due_date}`}>
+                    <span>{date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
+                    <b>{item.description}<small>{item.category}{item.recurring ? ' - mensal' : ''}</small></b>
+                    <strong>{money.format(item.amount)}</strong>
+                  </div>
+                );
+              })}
+            </div>
+          ) : <EmptyPanel text="Cadastre gastos como mercado, aluguel e internet para prever o proximo mes." compact />}
         </article>
 
         <article className="panel">

@@ -6,7 +6,7 @@ import { normalizePayload } from '../utils/format.js';
 
 const quickFields = {
   incomes: ['description', 'amount', 'received_date', 'status', 'bank_account_id'],
-  expenses: ['description', 'amount', 'due_date', 'status', 'bank_account_id'],
+  expenses: ['description', 'amount', 'due_date', 'category_id', 'status', 'is_recurring', 'recurrence_type', 'bank_account_id'],
   debts: ['debt_name', 'creditor', 'current_amount', 'due_date', 'priority', 'status'],
   'credit-cards': ['card_name', 'issuer', 'total_limit', 'current_invoice_value', 'due_day', 'status'],
   'bank-accounts': ['bank_name', 'account_type', 'current_balance', 'overdraft_limit', 'overdraft_used']
@@ -77,6 +77,7 @@ function selectedFields(resource) {
 function buildInitial(resource) {
   return Object.fromEntries(selectedFields(resource).map(([name, , type, opts]) => {
     if (type === 'checkbox') return [name, false];
+    if (resource.endpoint === 'expenses' && name === 'recurrence_type') return [name, 'mensal'];
     if (type === 'select') return [name, opts[0] ?? ''];
     if (type === 'date') return [name, new Date().toISOString().slice(0, 10)];
     return [name, ''];
