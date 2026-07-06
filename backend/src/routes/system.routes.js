@@ -143,6 +143,27 @@ router.get('/next-month-payables', authRequired, async (req, res, next) => {
   }
 });
 
+router.get('/monthly-expenses', authRequired, async (req, res, next) => {
+  try {
+    const current = monthRange(0);
+    const nextMonth = monthRange(1);
+    const [currentRows, nextRows] = await Promise.all([
+      listMonthExpenses(req.user.id, current),
+      listMonthExpenses(req.user.id, nextMonth)
+    ]);
+
+    const currentItems = currentRows.map((item) => formatMonthlyExpense(item, current));
+    const nextItems = nextRows.map((item) => formatMonthlyExpense(item, nextMonth));
+
+    res.json({
+      current: buildMonthlyExpenseSummary(current, currentItems),
+      next: buildMonthlyExpenseSummary(nextMonth, nextItems)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/onboarding', authRequired, async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -172,13 +193,87 @@ router.get('/onboarding', authRequired, async (req, res, next) => {
 
 export default router;
 
+async function listMonthExpenses(userId, range) {
+  return query(
+    `SELECT e.id, e.description, e.amount, e.due_date, e.payment_date, e.is_recurring, e.recurrence_type, e.status, c.name AS category_name
+     FROM expenses e
+     LEFT JOIN categories c ON c.id = e.category_id AND c.user_id = e.user_id
+     WHERE e.user_id = :userId
+       AND e.status <> 'cancelado'
+       AND (
+         e.due_date BETWEEN :start AND :end
+         OR (e.is_recurring = TRUE AND e.recurrence_type = 'mensal' AND e.due_date <= :end)
+       )
+     ORDER BY e.due_date ASC, e.created_at DESC`,
+    { userId, start: range.start, end: range.end }
+  );
+}
+
+function formatMonthlyExpense(item, range) {
+  const type = classifyExpense(item);
+  return {
+    id: item.id,
+    description: item.description,
+    amount: roundMoney(toNumber(item.amount)),
+    due_date: item.is_recurring ? dateForDay(range.year, range.month, dayOfMonth(item.due_date)) : String(item.due_date).slice(0, 10),
+    payment_date: item.payment_date ? String(item.payment_date).slice(0, 10) : null,
+    category: item.category_name || 'Sem categoria',
+    type,
+    type_label: { fixed: 'Fixo', variable: 'Variavel', extra: 'Extra' }[type],
+    recurring: Boolean(item.is_recurring),
+    status: item.status
+  };
+}
+
+function classifyExpense(item) {
+  if (item.is_recurring && item.recurrence_type === 'mensal') return 'fixed';
+  const text = `${item.category_name || ''} ${item.description || ''}`.toLowerCase();
+  if (['mercado', 'alimentacao', 'combustivel', 'transporte', 'farmacia', 'saude', 'manutencao'].some((word) => text.includes(word))) return 'variable';
+  return 'extra';
+}
+
+function buildMonthlyExpenseSummary(range, items) {
+  const byType = {
+    fixed: summarizeType(items, 'fixed'),
+    variable: summarizeType(items, 'variable'),
+    extra: summarizeType(items, 'extra')
+  };
+  const total = items.reduce((sum, item) => sum + item.amount, 0);
+  const paid = items.filter((item) => item.status === 'pago').reduce((sum, item) => sum + item.amount, 0);
+  const open = total - paid;
+  return {
+    month: range.key,
+    label: new Date(range.year, range.month, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+    total: roundMoney(total),
+    paid: roundMoney(paid),
+    open: roundMoney(open),
+    count: items.length,
+    byType,
+    items
+  };
+}
+
+function summarizeType(items, type) {
+  const filtered = items.filter((item) => item.type === type);
+  return {
+    total: roundMoney(filtered.reduce((sum, item) => sum + item.amount, 0)),
+    count: filtered.length,
+    items: filtered
+  };
+}
+
 function nextMonthRange() {
+  return monthRange(1);
+}
+
+function monthRange(offset) {
   const now = new Date();
-  const year = now.getFullYear() + (now.getMonth() === 11 ? 1 : 0);
-  const month = now.getMonth() === 11 ? 0 : now.getMonth() + 1;
+  const base = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+  const year = base.getFullYear();
+  const month = base.getMonth();
   const start = new Date(year, month, 1).toISOString().slice(0, 10);
   const end = new Date(year, month + 1, 0).toISOString().slice(0, 10);
-  return { start, end, year, month };
+  return { start, end, year, month, key: `${year}-${String(month + 1).padStart(2, '0')}` };
 }
 
 function dayOfMonth(value) {

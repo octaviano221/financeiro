@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { BarChart3, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, CreditCard, Flag, Gauge, Home, LineChart, LogOut, Mail, Menu, Moon, Receipt, Search, Server, Settings, ShieldAlert, Sparkles, Target, UserRound, WalletCards } from 'lucide-react';
+import { BarChart3, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, CreditCard, Flag, Gauge, Home, LineChart, LogOut, Mail, Menu, Moon, Receipt, Search, Server, Settings, ShieldAlert, ShoppingCart, Sparkles, Target, UserRound, WalletCards } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { useAuth } from '../state/AuthContext.jsx';
@@ -13,6 +13,7 @@ const nav = [
   ['/dividas', 'Dividas', Receipt],
   ['/receitas', 'Receitas', WalletCards],
   ['/despesas', 'Despesas', Bell],
+  ['/gastos-mensais', 'Gastos Mensais', ShoppingCart],
   ['/fluxo-de-caixa', 'Fluxo de Caixa', LineChart],
   ['/plano-de-acao', 'Plano', Flag],
   ['/pagamentos', 'Pagamentos', CheckCircle2],
