@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Banknote, CalendarDays, CreditCard, HandCoins, HeartPulse, Landmark, Plus, Receipt, ShieldAlert, Target, TrendingDown, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Banknote, CalendarDays, CreditCard, HandCoins, HeartPulse, Landmark, Plus, Receipt, ShieldAlert, Target, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api } from '../api/client.js';
+import { useConfirm } from '../state/ConfirmContext.jsx';
+import { useToast } from '../state/ToastContext.jsx';
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const colors = ['#2563eb', '#16a34a', '#f97316', '#dc2626', '#7c3aed'];
@@ -15,6 +17,8 @@ export function Dashboard() {
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [error, setError] = useState('');
   const [upcoming, setUpcoming] = useState([]);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadDashboard();
@@ -55,10 +59,32 @@ export function Dashboard() {
   }
 
   async function seedDemo() {
-    setLoadingDemo(true);
-    await api.post('/demo/seed');
-    await loadDashboard();
-    setLoadingDemo(false);
+    try {
+      setLoadingDemo(true);
+      await api.post('/demo/seed');
+      showToast('Dados demo adicionados.');
+      await loadDashboard();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Nao foi possivel carregar a demo.', 'error');
+    } finally {
+      setLoadingDemo(false);
+    }
+  }
+
+  async function clearFinancialData() {
+    const ok = await confirm({
+      title: 'Limpar dados financeiros',
+      message: 'Isso remove bancos, receitas, despesas, dividas, cartoes, metas, pagamentos e alertas desta conta. Seu login continua ativo.',
+      confirmText: 'Limpar dados'
+    });
+    if (!ok) return;
+    try {
+      await api.delete('/demo/clear');
+      showToast('Dados financeiros removidos.');
+      await loadDashboard();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Nao foi possivel limpar os dados.', 'error');
+    }
   }
 
   if (!summary) return <div className="page">Carregando dashboard...</div>;
@@ -104,6 +130,7 @@ export function Dashboard() {
         <div className="dashboard-actions">
           <button className="month-button">Mes atual: {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} <CalendarDays size={16} /></button>
           <Link to="/receitas" className="primary-action"><Plus size={16} /> Acao rapida</Link>
+          {hasFinancialData && <button className="danger-soft-action" onClick={clearFinancialData}><Trash2 size={16} /> Limpar demo/dados</button>}
         </div>
       </div>
 

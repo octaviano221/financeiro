@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, Circle, Sparkles } from 'lucide-react';
+import { CheckCircle2, Circle, Sparkles, Trash2 } from 'lucide-react';
 import { api } from '../api/client.js';
+import { useConfirm } from '../state/ConfirmContext.jsx';
 import { useToast } from '../state/ToastContext.jsx';
 
 export function OnboardingPage() {
   const [data, setData] = useState(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
   const { showToast } = useToast();
+  const { confirm } = useConfirm();
 
   useEffect(() => {
     load();
@@ -28,6 +30,22 @@ export function OnboardingPage() {
       showToast(error.response?.data?.message || 'Nao foi possivel carregar demo.', 'error');
     } finally {
       setLoadingDemo(false);
+    }
+  }
+
+  async function clearFinancialData() {
+    const ok = await confirm({
+      title: 'Limpar dados financeiros',
+      message: 'Isso remove todos os dados financeiros desta conta e mantem seu usuario para voce recomecar com dados reais.',
+      confirmText: 'Limpar dados'
+    });
+    if (!ok) return;
+    try {
+      await api.delete('/demo/clear');
+      showToast('Dados financeiros removidos.');
+      await load();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Nao foi possivel limpar os dados.', 'error');
     }
   }
 
@@ -65,9 +83,12 @@ export function OnboardingPage() {
       <article className="panel onboarding-demo-panel">
         <div>
           <h2>Quer testar antes de preencher seus dados?</h2>
-          <p>Carregue uma demonstracao somente se sua conta ainda estiver vazia. Depois voce pode limpar em Configuracoes.</p>
+          <p>Carregue uma demonstracao somente se sua conta ainda estiver vazia. Se carregou por engano, limpe aqui e comece de novo com seus dados reais.</p>
         </div>
-        <button onClick={seedDemo} disabled={loadingDemo}>{loadingDemo ? 'Carregando...' : 'Carregar demo'}</button>
+        <div className="onboarding-demo-actions">
+          <button onClick={seedDemo} disabled={loadingDemo}>{loadingDemo ? 'Carregando...' : 'Carregar demo'}</button>
+          <button className="danger-inline" onClick={clearFinancialData}><Trash2 size={16} /> Limpar demo/dados</button>
+        </div>
       </article>
     </section>
   );
