@@ -25,6 +25,13 @@ export function SettingsPage() {
     showToast('Dados demo adicionados.');
   }
 
+  async function clearFinancialData() {
+    if (!confirm('Isso vai apagar bancos, receitas, despesas, dividas, cartoes, metas, pagamentos e alertas desta conta. Deseja continuar?')) return;
+    await api.delete('/demo/clear');
+    setMessage('Dados financeiros removidos. Sua conta continua ativa.');
+    showToast('Dados financeiros removidos.');
+  }
+
   if (!settings) return <section className="page">Carregando configuracoes...</section>;
 
   return (
@@ -48,7 +55,10 @@ export function SettingsPage() {
       <article className="panel">
         <h2>Dados de demonstracao</h2>
         <p>Adicione exemplos de bancos, cartoes, dividas, receitas, despesas e metas para visualizar o dashboard preenchido.</p>
-        <button className="primary-inline" onClick={seedDemo}>Adicionar dados demo</button>
+        <div className="settings-actions">
+          <button className="primary-inline" onClick={seedDemo}>Adicionar dados demo</button>
+          <button className="danger-inline" onClick={clearFinancialData}>Limpar dados financeiros</button>
+        </div>
         {message && <p className="success-text">{message}</p>}
       </article>
     </section>

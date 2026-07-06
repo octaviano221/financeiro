@@ -404,6 +404,14 @@ p { color: #64748b; line-height: 1.55; }
   padding: 11px 14px;
   font-weight: 800;
 }
+.settings-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.danger-inline {
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-weight: 800;
+}
 .result-card { display: grid; gap: 12px; }
 .form-panel { padding: 18px; margin-bottom: 18px; }
 .form-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }

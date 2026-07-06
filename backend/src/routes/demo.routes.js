@@ -21,4 +21,24 @@ router.post('/seed', async (req, res, next) => {
   }
 });
 
+router.delete('/clear', async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    await query('DELETE FROM payments WHERE user_id = :userId', { userId });
+    await query('DELETE FROM alerts WHERE user_id = :userId', { userId });
+    await query('DELETE FROM action_plans WHERE user_id = :userId', { userId });
+    await query('DELETE FROM card_transactions WHERE user_id = :userId', { userId });
+    await query('DELETE FROM incomes WHERE user_id = :userId', { userId });
+    await query('DELETE FROM expenses WHERE user_id = :userId', { userId });
+    await query('DELETE FROM debts WHERE user_id = :userId', { userId });
+    await query('DELETE FROM financial_goals WHERE user_id = :userId', { userId });
+    await query('DELETE FROM credit_cards WHERE user_id = :userId', { userId });
+    await query('DELETE FROM bank_accounts WHERE user_id = :userId', { userId });
+    await query('DELETE FROM categories WHERE user_id = :userId', { userId });
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
