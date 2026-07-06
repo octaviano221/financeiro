@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { Landmark } from 'lucide-react';
 import { useAuth } from '../state/AuthContext.jsx';
 import { api } from '../api/client.js';
+import { useToast } from '../state/ToastContext.jsx';
 
 export function AuthPage() {
   const { user, login, register } = useAuth();
@@ -11,6 +12,7 @@ export function AuthPage() {
   const [info, setInfo] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', profile_type: 'pessoal' });
   const [reset, setReset] = useState({ token: '', password: '' });
+  const { showToast } = useToast();
 
   if (user) return <Navigate to="/" replace />;
 
@@ -19,23 +21,41 @@ export function AuthPage() {
     setError('');
     setInfo('');
     try {
-      if (mode === 'login') await login(form.email, form.password);
-      else if (mode === 'register') await register(form);
+      if (mode === 'login') {
+        await login(form.email, form.password);
+        showToast('Login realizado.');
+      } else if (mode === 'register') {
+        await register(form);
+        showToast('Conta criada.');
+      }
       else if (mode === 'forgot') {
         const response = await api.post('/password/forgot', { email: form.email });
         setInfo(`${response.data.message}${response.data.reset_token ? ` Token: ${response.data.reset_token}` : ''}`);
+        showToast('Token gerado.');
       } else if (mode === 'reset') {
         await api.post('/password/reset', reset);
         setInfo('Senha alterada. Entre com a nova senha.');
         setMode('login');
+        showToast('Senha alterada.');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Nao foi possivel concluir');
+      showToast(err.response?.data?.message || 'Nao foi possivel concluir.', 'error');
     }
   }
 
   return (
     <div className="auth-page">
+      <section className="auth-copy">
+        <div className="auth-logo-mark"><Landmark size={38} /></div>
+        <h1>Gestao Financeira Inteligente</h1>
+        <p>Organize bancos, cartoes, dividas, receitas e despesas em um painel simples para sair do aperto com plano de acao.</p>
+        <div className="auth-highlights">
+          <span>Dashboard financeiro</span>
+          <span>Plano contra dividas</span>
+          <span>Modo emergencia</span>
+        </div>
+      </section>
       <section className="auth-panel">
         <div className="auth-brand"><Landmark size={34} /><strong>Gestao Financeira Inteligente</strong></div>
         <h1>{mode === 'login' ? 'Acesse sua conta' : mode === 'register' ? 'Crie sua conta' : mode === 'forgot' ? 'Recuperar senha' : 'Nova senha'}</h1>

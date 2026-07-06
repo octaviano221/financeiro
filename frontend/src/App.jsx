@@ -11,6 +11,8 @@ import { CashFlowPage } from './pages/CashFlowPage.jsx';
 import { CalendarPage } from './pages/CalendarPage.jsx';
 import { SimulatorPage } from './pages/SimulatorPage.jsx';
 import { PaymentsPage } from './pages/PaymentsPage.jsx';
+import { AlertsPage } from './pages/AlertsPage.jsx';
+import { EmergencyPage } from './pages/EmergencyPage.jsx';
 import { resources } from './resources.js';
 
 function PrivateRoute({ children }) {
@@ -31,6 +33,8 @@ export default function App() {
         <Route path="fluxo-de-caixa" element={<CashFlowPage />} />
         <Route path="plano-de-acao" element={<ActionPlanPage />} />
         <Route path="pagamentos" element={<PaymentsPage />} />
+        <Route path="alertas" element={<AlertsPage />} />
+        <Route path="emergencia" element={<EmergencyPage />} />
         <Route path="simulador" element={<SimulatorPage />} />
         <Route path="calendario" element={<CalendarPage />} />
         <Route path="relatorios" element={<ReportsPage />} />

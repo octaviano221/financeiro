@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { Calculator } from 'lucide-react';
 import { api } from '../api/client.js';
+import { useToast } from '../state/ToastContext.jsx';
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export function SimulatorPage() {
   const [form, setForm] = useState({ current_amount: '', down_payment: '', installments: 12, monthly_interest_rate: '', current_scenario_total: '' });
   const [result, setResult] = useState(null);
+  const { showToast } = useToast();
 
   async function submit(event) {
     event.preventDefault();
     const response = await api.post('/tools/renegotiation/simulate', form);
     setResult(response.data);
+    showToast('Simulacao calculada.');
   }
 
   return (

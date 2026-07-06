@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { api } from '../api/client.js';
+import { useToast } from '../state/ToastContext.jsx';
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -12,6 +13,7 @@ export function PaymentsPage() {
   const [payments, setPayments] = useState([]);
   const [message, setMessage] = useState('');
   const [form, setForm] = useState({ target_type: 'expense', target_id: '', amount: '', bank_account_id: '', payment_date: new Date().toISOString().slice(0, 10), notes: '' });
+  const { showToast } = useToast();
 
   useEffect(() => {
     load();
@@ -45,10 +47,15 @@ export function PaymentsPage() {
 
   async function submit(event) {
     event.preventDefault();
-    await api.post('/payments/register', form);
-    setMessage('Pagamento registrado com sucesso.');
-    setForm({ ...form, target_id: '', amount: '', notes: '' });
-    await load();
+    try {
+      await api.post('/payments/register', form);
+      setMessage('Pagamento registrado com sucesso.');
+      showToast('Pagamento registrado.');
+      setForm({ ...form, target_id: '', amount: '', notes: '' });
+      await load();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Nao foi possivel registrar pagamento.', 'error');
+    }
   }
 
   return (

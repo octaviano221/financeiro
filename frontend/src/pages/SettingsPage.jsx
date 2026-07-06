@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
+import { useToast } from '../state/ToastContext.jsx';
 
 export function SettingsPage() {
   const [settings, setSettings] = useState(null);
   const [message, setMessage] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     api.get('/settings').then((response) => setSettings(response.data));
@@ -14,11 +16,13 @@ export function SettingsPage() {
     const response = await api.put('/settings', settings);
     setSettings(response.data);
     setMessage('Configuracoes salvas.');
+    showToast('Configuracoes salvas.');
   }
 
   async function seedDemo() {
     await api.post('/demo/seed');
     setMessage('Dados de exemplo adicionados. Volte ao dashboard para visualizar.');
+    showToast('Dados demo adicionados.');
   }
 
   if (!settings) return <section className="page">Carregando configuracoes...</section>;

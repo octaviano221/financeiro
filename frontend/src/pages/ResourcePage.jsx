@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Edit3, Plus, Trash2, X } from 'lucide-react';
 import { api } from '../api/client.js';
+import { useToast } from '../state/ToastContext.jsx';
+import { normalizePayload } from '../utils/format.js';
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -10,6 +12,7 @@ export function ResourcePage({ resource }) {
   const [form, setForm] = useState({});
   const [formOpen, setFormOpen] = useState(false);
   const [relationOptions, setRelationOptions] = useState({});
+  const { showToast } = useToast();
 
   useEffect(() => {
     load();
@@ -45,19 +48,29 @@ export function ResourcePage({ resource }) {
 
   async function submit(event) {
     event.preventDefault();
-    const payload = Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value === '' ? null : value]));
-    if (editing) await api.put(`/${resource.endpoint}/${editing.id}`, payload);
-    else await api.post(`/${resource.endpoint}`, payload);
-    setForm({});
-    setEditing(null);
-    setFormOpen(false);
-    await load();
+    try {
+      const payload = normalizePayload(form);
+      if (editing) await api.put(`/${resource.endpoint}/${editing.id}`, payload);
+      else await api.post(`/${resource.endpoint}`, payload);
+      setForm({});
+      setEditing(null);
+      setFormOpen(false);
+      showToast(editing ? 'Registro atualizado.' : 'Registro cadastrado.');
+      await load();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Nao foi possivel salvar.', 'error');
+    }
   }
 
   async function remove(id) {
     if (!confirm('Deseja excluir este registro?')) return;
-    await api.delete(`/${resource.endpoint}/${id}`);
-    await load();
+    try {
+      await api.delete(`/${resource.endpoint}/${id}`);
+      showToast('Registro excluido.');
+      await load();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Nao foi possivel excluir.', 'error');
+    }
   }
 
   return (
@@ -96,7 +109,7 @@ export function ResourcePage({ resource }) {
                     ))}
                   </select>
                 ) : (
-                  <input type={type} value={form[name] ?? ''} onChange={(e) => setForm({ ...form, [name]: e.target.value })} />
+                  <input type={type} step={type === 'number' ? '0.01' : undefined} value={form[name] ?? ''} onChange={(e) => setForm({ ...form, [name]: e.target.value })} />
                 )}
               </label>
             ))}
