@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { AlertTriangle, Banknote, CalendarDays, CreditCard, HandCoins, HeartPulse, Landmark, Plus, Receipt, ShieldAlert, Target, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api } from '../api/client.js';
+import { QuickCreateModal } from '../components/QuickCreateModal.jsx';
+import { resources } from '../resources.js';
 import { useConfirm } from '../state/ConfirmContext.jsx';
 import { useToast } from '../state/ToastContext.jsx';
 
@@ -17,6 +19,7 @@ export function Dashboard() {
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [error, setError] = useState('');
   const [upcoming, setUpcoming] = useState([]);
+  const [quickResource, setQuickResource] = useState(null);
   const { confirm } = useConfirm();
   const { showToast } = useToast();
 
@@ -119,6 +122,13 @@ export function Dashboard() {
   const hasCategoryChart = (charts?.expensesByCategory || []).length > 0;
   const debtPriorityData = buildDebtPriorityData(charts?.debts || []);
   const planSteps = buildPlanSteps(summary);
+  const quickResources = [
+    resources.find((resource) => resource.endpoint === 'incomes'),
+    resources.find((resource) => resource.endpoint === 'expenses'),
+    resources.find((resource) => resource.endpoint === 'debts'),
+    resources.find((resource) => resource.endpoint === 'credit-cards'),
+    resources.find((resource) => resource.endpoint === 'bank-accounts')
+  ].filter(Boolean);
 
   return (
     <section className="page dashboard-page">
@@ -287,13 +297,25 @@ export function Dashboard() {
 
       <div className="quick-action-bar">
         <strong>Acoes rapidas</strong>
-        <Link to="/receitas"><Plus size={16} /> Nova Receita</Link>
-        <Link to="/despesas"><Plus size={16} /> Nova Despesa</Link>
-        <Link to="/dividas"><Plus size={16} /> Nova Divida</Link>
-        <Link to="/cartoes"><CreditCard size={16} /> Novo Cartao</Link>
-        <Link to="/bancos"><Landmark size={16} /> Novo Banco</Link>
+        {quickResources.map((resource) => (
+          <button key={resource.endpoint} onClick={() => setQuickResource(resource)}>
+            {resource.endpoint === 'credit-cards' ? <CreditCard size={16} /> : resource.endpoint === 'bank-accounts' ? <Landmark size={16} /> : <Plus size={16} />}
+            {resource.action}
+          </button>
+        ))}
         <Link to="/plano-de-acao"><Target size={16} /> Criar Plano</Link>
       </div>
+
+      {quickResource && (
+        <QuickCreateModal
+          resource={quickResource}
+          onClose={() => setQuickResource(null)}
+          onSaved={async () => {
+            setQuickResource(null);
+            await loadDashboard();
+          }}
+        />
+      )}
     </section>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Edit3, Plus, Trash2, X } from 'lucide-react';
+import { Edit3, Plus, Search, Trash2, X } from 'lucide-react';
 import { api } from '../api/client.js';
 import { useToast } from '../state/ToastContext.jsx';
 import { useConfirm } from '../state/ConfirmContext.jsx';
@@ -13,6 +13,7 @@ export function ResourcePage({ resource }) {
   const [form, setForm] = useState({});
   const [formOpen, setFormOpen] = useState(false);
   const [relationOptions, setRelationOptions] = useState({});
+  const [search, setSearch] = useState('');
   const { showToast } = useToast();
   const { confirm } = useConfirm();
 
@@ -80,6 +81,11 @@ export function ResourcePage({ resource }) {
     }
   }
 
+  const filteredItems = items.filter((item) => {
+    const text = resource.columns.map((column) => item[column]).join(' ').toLowerCase();
+    return text.includes(search.trim().toLowerCase());
+  });
+
   return (
     <section className="page">
       <div className="page-title">
@@ -88,6 +94,14 @@ export function ResourcePage({ resource }) {
           <p>Cadastre, edite e acompanhe os dados financeiros deste modulo.</p>
         </div>
         <button onClick={() => openForm({})}><Plus size={16} /> {resource.action}</button>
+      </div>
+
+      <div className="resource-toolbar">
+        <div className="resource-search">
+          <Search size={18} />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`Buscar em ${resource.title.toLowerCase()}...`} />
+        </div>
+        <span>{filteredItems.length} de {items.length} registro(s)</span>
       </div>
 
       {formOpen && (
@@ -137,7 +151,7 @@ export function ResourcePage({ resource }) {
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <tr key={item.id}>
                 {resource.columns.map((column) => <td key={column}>{formatCell(item[column])}</td>)}
                 <td className="actions">
@@ -147,6 +161,7 @@ export function ResourcePage({ resource }) {
               </tr>
             ))}
             {items.length === 0 && <tr><td colSpan={resource.columns.length + 1}>Nenhum registro cadastrado.</td></tr>}
+            {items.length > 0 && filteredItems.length === 0 && <tr><td colSpan={resource.columns.length + 1}>Nenhum resultado encontrado para a busca.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -166,5 +181,14 @@ function formatCell(value) {
   if (value === null || value === undefined) return '-';
   if (typeof value === 'number') return value > 999 || String(value).includes('.') ? money.format(value) : value;
   if (typeof value === 'boolean') return value ? 'Sim' : 'Nao';
+  if (isStatusValue(value)) return <span className={`status-badge ${String(value).replaceAll('_', '-')}`}>{prettyText(value)}</span>;
   return String(value);
+}
+
+function isStatusValue(value) {
+  return ['aberta', 'fechada', 'paga', 'atrasada', 'parcelada', 'em_dia', 'renegociada', 'quitada', 'em_negociacao', 'recebido', 'previsto', 'aberto', 'pago', 'vencido', 'cancelado', 'ativa', 'concluida', 'pausada', 'baixa', 'media', 'alta', 'urgente'].includes(String(value));
+}
+
+function prettyText(value) {
+  return String(value).replaceAll('_', ' ');
 }
