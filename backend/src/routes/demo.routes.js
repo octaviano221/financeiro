@@ -8,6 +8,19 @@ router.use(authRequired);
 router.post('/seed', async (req, res, next) => {
   try {
     const userId = req.user.id;
+    const existing = await query(
+      `SELECT
+        (SELECT COUNT(*) FROM bank_accounts WHERE user_id = :userId) AS banks,
+        (SELECT COUNT(*) FROM credit_cards WHERE user_id = :userId) AS cards,
+        (SELECT COUNT(*) FROM debts WHERE user_id = :userId) AS debts,
+        (SELECT COUNT(*) FROM incomes WHERE user_id = :userId) AS incomes,
+        (SELECT COUNT(*) FROM expenses WHERE user_id = :userId) AS expenses`,
+      { userId }
+    );
+    const total = Object.values(existing[0]).reduce((sum, value) => sum + Number(value), 0);
+    if (total > 0) {
+      return res.status(409).json({ message: 'Sua conta ja possui dados. Limpe os dados financeiros antes de carregar a demonstracao.' });
+    }
     await query('INSERT INTO categories (user_id, name, type, color, icon) VALUES (:userId, "Salario", "receita", "#16a34a", "wallet"), (:userId, "Moradia", "despesa", "#2563eb", "home"), (:userId, "Alimentacao", "despesa", "#f97316", "utensils"), (:userId, "Dividas", "despesa", "#dc2626", "receipt")', { userId });
     await query('INSERT INTO bank_accounts (user_id, bank_name, account_type, current_balance, overdraft_limit, overdraft_used, overdraft_interest_rate, interest_due_day) VALUES (:userId, "Nubank", "digital", 8754.32, 3000, 2450, 8.5, 10)', { userId });
     await query('INSERT INTO credit_cards (user_id, card_name, issuer, total_limit, used_limit, closing_day, due_day, revolving_interest_rate, current_invoice_value, minimum_payment_value, status) VALUES (:userId, "Cartao Principal", "Nubank", 10000, 6250, 15, 20, 14.9, 6250, 987.60, "aberta")', { userId });

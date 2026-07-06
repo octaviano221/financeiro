@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { BarChart3, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, CreditCard, Flag, Gauge, Home, LineChart, LogOut, Mail, Menu, Moon, Receipt, Search, Settings, ShieldAlert, Target, WalletCards } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { useAuth } from '../state/AuthContext.jsx';
 
@@ -27,11 +27,13 @@ const nav = [
 
 export function Layout() {
   const { user, logout } = useAuth();
+  const [health, setHealth] = useState(null);
 
   useEffect(() => {
     api.get('/settings').then((response) => {
       document.body.classList.toggle('dark-theme', response.data.theme === 'dark');
     }).catch(() => {});
+    api.get('/dashboard/financial-health').then((response) => setHealth(response.data)).catch(() => setHealth(null));
   }, []);
 
   return (
@@ -54,9 +56,9 @@ export function Layout() {
         </nav>
         <div className="sidebar-health">
           <span>Saude Financeira</span>
-          <strong>62 / 100</strong>
-          <small>Regular</small>
-          <div className="mini-gauge"><i /></div>
+          <strong>{health ? `${health.score} / 100` : '-- / 100'}</strong>
+          <small>{health?.classification || 'Sem dados'}</small>
+          <div className="mini-gauge"><i style={{ width: `${health?.score || 0}%` }} /></div>
         </div>
         <button className="logout" onClick={logout}><LogOut size={18} /> Sair</button>
       </aside>
@@ -74,7 +76,7 @@ export function Layout() {
             <div className="avatar">{user?.name?.slice(0, 1) || 'U'}</div>
             <div>
               <strong>Ola, {user?.name || 'Usuario'}!</strong>
-              <span>Plano Premium</span>
+              <span>Conta ativa</span>
             </div>
             <ChevronDown size={16} />
           </div>

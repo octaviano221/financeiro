@@ -20,16 +20,28 @@ export function SettingsPage() {
   }
 
   async function seedDemo() {
-    await api.post('/demo/seed');
-    setMessage('Dados de exemplo adicionados. Volte ao dashboard para visualizar.');
-    showToast('Dados demo adicionados.');
+    try {
+      await api.post('/demo/seed');
+      setMessage('Dados de exemplo adicionados. Volte ao dashboard para visualizar.');
+      showToast('Dados demo adicionados.');
+    } catch (error) {
+      const message = error.response?.data?.message || 'Nao foi possivel adicionar dados demo.';
+      setMessage(message);
+      showToast(message, 'error');
+    }
   }
 
   async function clearFinancialData() {
     if (!confirm('Isso vai apagar bancos, receitas, despesas, dividas, cartoes, metas, pagamentos e alertas desta conta. Deseja continuar?')) return;
-    await api.delete('/demo/clear');
-    setMessage('Dados financeiros removidos. Sua conta continua ativa.');
-    showToast('Dados financeiros removidos.');
+    try {
+      await api.delete('/demo/clear');
+      setMessage('Dados financeiros removidos. Sua conta continua ativa.');
+      showToast('Dados financeiros removidos.');
+    } catch (error) {
+      const message = error.response?.data?.message || 'Nao foi possivel limpar dados.';
+      setMessage(message);
+      showToast(message, 'error');
+    }
   }
 
   if (!settings) return <section className="page">Carregando configuracoes...</section>;

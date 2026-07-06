@@ -18,7 +18,7 @@ Sistema web MVP para gestao financeira pessoal/empresarial, com Node.js, Express
 - Configuracoes persistidas por usuario
 - Compras parceladas no cartao com geracao automatica de parcelas futuras
 - Relatorios visuais de resumo mensal, dividas e cartoes
-- Seed de dados demonstrativos para preencher o dashboard
+- Seed de dados demonstrativos protegido contra duplicacao
 - Registro de pagamento com baixa de despesa, divida e fatura
 - Exportacao CSV de receitas, despesas, dividas e cartoes
 - Geracao de PDF via impressao do navegador
@@ -130,6 +130,7 @@ HOSTINGER_DEPLOY.md
 - Troque `JWT_SECRET` por uma chave forte.
 - Configure `FRONTEND_URL` com o dominio real.
 - Use senha forte no MySQL.
+- Use `hostinger-env-backend.example.env` apenas como modelo. Nunca suba senha real do banco.
 - Importe `schema.sql` em banco novo ou rode as migrations em banco existente.
 - Configure HTTPS no dominio.
 - Teste cadastro, login, dashboard, pagamento e exportacao antes de divulgar.

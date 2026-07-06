@@ -99,7 +99,7 @@ export function Dashboard() {
           <p>Visao geral da sua vida financeira</p>
         </div>
         <div className="dashboard-actions">
-          <button className="month-button">Mes atual: Maio/2024 <CalendarDays size={16} /></button>
+          <button className="month-button">Mes atual: {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} <CalendarDays size={16} /></button>
           <Link to="/receitas" className="primary-action"><Plus size={16} /> Acao rapida</Link>
         </div>
       </div>
