@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, CheckCircle2, CircleDollarSign, Plus, Receipt, Repeat2, ShoppingCart, WalletCards } from 'lucide-react';
+import { CalendarDays, CheckCircle2, CircleDollarSign, CopyPlus, Plus, Receipt, Repeat2, ShoppingCart, WalletCards } from 'lucide-react';
 import { api } from '../api/client.js';
 import { QuickCreateModal } from '../components/QuickCreateModal.jsx';
 import { resources } from '../resources.js';
@@ -20,13 +20,19 @@ export function MonthlyExpensesPage() {
   const [status, setStatus] = useState('all');
   const [quickOpen, setQuickOpen] = useState(false);
   const [payingId, setPayingId] = useState(null);
+  const [duplicatingId, setDuplicatingId] = useState(null);
   const { showToast } = useToast();
 
   const expenseResource = useMemo(() => resources.find((resource) => resource.endpoint === 'expenses'), []);
 
   useEffect(() => {
-    load();
+    boot();
   }, []);
+
+  async function boot() {
+    await api.post('/system/default-categories/ensure').catch(() => {});
+    await load();
+  }
 
   async function load() {
     const response = await api.get('/system/monthly-expenses');
@@ -49,6 +55,19 @@ export function MonthlyExpensesPage() {
       showToast(error.response?.data?.message || 'Nao foi possivel marcar como pago.', 'error');
     } finally {
       setPayingId(null);
+    }
+  }
+
+  async function duplicateNextMonth(item) {
+    try {
+      setDuplicatingId(item.id);
+      await api.post(`/system/monthly-expenses/${item.id}/duplicate-next-month`);
+      showToast('Gasto repetido para o mes que vem.');
+      await load();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Nao foi possivel repetir o gasto.', 'error');
+    } finally {
+      setDuplicatingId(null);
     }
   }
 
@@ -149,6 +168,9 @@ export function MonthlyExpensesPage() {
                       <CheckCircle2 size={15} /> {payingId === item.id ? 'Baixando...' : 'Marcar pago'}
                     </button>
                   )}
+                  <button className="repeat-expense-button" onClick={() => duplicateNextMonth(item)} disabled={duplicatingId === item.id}>
+                    <CopyPlus size={15} /> {duplicatingId === item.id ? 'Repetindo...' : 'Mes que vem'}
+                  </button>
                 </div>
               );
             })}

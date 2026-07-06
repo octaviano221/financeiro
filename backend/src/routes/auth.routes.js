@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { query } from '../config/db.js';
 import { authRequired } from '../middlewares/auth.js';
 import { httpError } from '../utils/httpError.js';
+import { ensureDefaultCategories } from '../services/categoryDefaultsService.js';
 
 const router = Router();
 
@@ -33,6 +34,7 @@ router.post('/register', async (req, res, next) => {
       'INSERT INTO users (name, email, password_hash, phone, profile_type) VALUES (:name, :email, :passwordHash, :phone, :profile_type)',
       { ...data, passwordHash }
     );
+    await ensureDefaultCategories(result.insertId);
     const user = { id: result.insertId, name: data.name, email: data.email, phone: data.phone, profile_type: data.profile_type };
     res.status(201).json({ user, token: sign(user) });
   } catch (error) {

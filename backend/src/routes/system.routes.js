@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authRequired } from '../middlewares/auth.js';
 import { query } from '../config/db.js';
 import { getFinancialSnapshot } from '../services/dashboardService.js';
+import { ensureDefaultCategories } from '../services/categoryDefaultsService.js';
 import { roundMoney, toNumber } from '../utils/money.js';
 
 const router = Router();
@@ -159,6 +160,42 @@ router.get('/monthly-expenses', authRequired, async (req, res, next) => {
       current: buildMonthlyExpenseSummary(current, currentItems),
       next: buildMonthlyExpenseSummary(nextMonth, nextItems)
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/default-categories/ensure', authRequired, async (req, res, next) => {
+  try {
+    res.json(await ensureDefaultCategories(req.user.id));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/monthly-expenses/:id/duplicate-next-month', authRequired, async (req, res, next) => {
+  try {
+    const rows = await query('SELECT * FROM expenses WHERE id = :id AND user_id = :userId', { id: req.params.id, userId: req.user.id });
+    const expense = rows[0];
+    if (!expense) return res.status(404).json({ message: 'Gasto nao encontrado' });
+
+    const next = monthRange(1);
+    const dueDate = dateForDay(next.year, next.month, dayOfMonth(expense.due_date));
+    const result = await query(
+      `INSERT INTO expenses (user_id, description, amount, due_date, category_id, bank_account_id, is_recurring, recurrence_type, status, notes)
+       VALUES (:userId, :description, :amount, :dueDate, :categoryId, :bankAccountId, FALSE, NULL, 'aberto', :notes)`,
+      {
+        userId: req.user.id,
+        description: expense.description,
+        amount: roundMoney(toNumber(expense.amount)),
+        dueDate,
+        categoryId: expense.category_id || null,
+        bankAccountId: expense.bank_account_id || null,
+        notes: expense.notes || null
+      }
+    );
+    const created = await query('SELECT * FROM expenses WHERE id = :id AND user_id = :userId', { id: result.insertId, userId: req.user.id });
+    res.status(201).json(created[0]);
   } catch (error) {
     next(error);
   }

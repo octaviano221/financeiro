@@ -463,7 +463,7 @@ p { color: #64748b; line-height: 1.55; }
 }
 .monthly-expense-list div {
   display: grid;
-  grid-template-columns: 78px 1fr auto auto auto;
+  grid-template-columns: 78px 1fr auto auto auto auto;
   gap: 12px;
   align-items: center;
   padding: 12px;
@@ -502,7 +502,23 @@ p { color: #64748b; line-height: 1.55; }
   font-weight: 900;
   white-space: nowrap;
 }
+.repeat-expense-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #eef2ff;
+  color: #1d4ed8;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
 .pay-expense-button:disabled {
+  opacity: .7;
+  cursor: wait;
+}
+.repeat-expense-button:disabled {
   opacity: .7;
   cursor: wait;
 }
@@ -881,7 +897,8 @@ pre { white-space: pre-wrap; background: #0f172a; color: #e2e8f0; padding: 18px;
   .monthly-expense-list div > span,
   .monthly-expense-list strong,
   .monthly-expense-list i,
-  .pay-expense-button { justify-self: start; }
+  .pay-expense-button,
+  .repeat-expense-button { justify-self: start; }
 }
 
 .success-box { color: #166534; background: #dcfce7; padding: 10px; border-radius: 8px; font-size: 13px; word-break: break-word; }
@@ -1212,6 +1229,8 @@ pre { white-space: pre-wrap; background: #0f172a; color: #e2e8f0; padding: 18px;
 .danger-inline,
 .secondary-inline,
 .icon-button,
+.pay-expense-button,
+.repeat-expense-button,
 .onboarding-actions a,
 .onboarding-actions button {
   transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease, color .16s ease, border-color .16s ease;
@@ -1229,6 +1248,8 @@ pre { white-space: pre-wrap; background: #0f172a; color: #e2e8f0; padding: 18px;
 .danger-inline:hover,
 .secondary-inline:hover,
 .icon-button:hover,
+.pay-expense-button:hover,
+.repeat-expense-button:hover,
 .onboarding-actions a:hover,
 .onboarding-actions button:hover {
   transform: translateY(-1px);
