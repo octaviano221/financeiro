@@ -912,3 +912,297 @@ pre { white-space: pre-wrap; background: #0f172a; color: #e2e8f0; padding: 18px;
   .onboarding-step-grid { grid-template-columns: 1fr; }
   .progress-ring { width: 112px; height: 112px; }
 }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes soft-pop {
+  0% { transform: scale(.96); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, .22); }
+  50% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+}
+
+@keyframes shimmer-line {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+@keyframes auth-sheen {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.page {
+  animation: fade-up .35s ease both;
+}
+
+.metric-card,
+.panel,
+.form-panel,
+.table-wrap,
+.quick-action-bar,
+.status-strip,
+.status-card {
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease;
+}
+
+.metric-card:hover,
+.panel:hover,
+.status-card:hover {
+  transform: translateY(-3px);
+  border-color: #dbeafe;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, .08);
+}
+
+.metric-card span,
+.status-item span,
+.brand svg,
+.avatar {
+  box-shadow: inset 0 -8px 18px rgba(255, 255, 255, .25), 0 8px 18px rgba(15, 23, 42, .08);
+}
+
+.brand svg,
+.avatar {
+  background: linear-gradient(135deg, #2563eb, #10b981);
+}
+
+.brand svg {
+  animation: pulse-ring 3.4s ease-in-out infinite;
+}
+
+.sidebar a,
+.logout,
+.ghost-icon,
+.top-logout,
+.primary-action,
+.full-action,
+.quick-action-bar a,
+.quick-action-bar button,
+.primary-inline,
+.danger-inline,
+.secondary-inline,
+.icon-button,
+.onboarding-actions a,
+.onboarding-actions button {
+  transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+
+.sidebar a:hover,
+.logout:hover,
+.ghost-icon:hover,
+.top-logout:hover,
+.primary-action:hover,
+.full-action:hover,
+.quick-action-bar a:hover,
+.quick-action-bar button:hover,
+.primary-inline:hover,
+.danger-inline:hover,
+.secondary-inline:hover,
+.icon-button:hover,
+.onboarding-actions a:hover,
+.onboarding-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.primary-action,
+.full-action,
+.primary-inline,
+.form-panel button[type="submit"],
+.compact button,
+.auth-panel button[type="submit"] {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, .18);
+}
+
+.primary-action::after,
+.full-action::after,
+.primary-inline::after,
+.form-panel button[type="submit"]::after,
+.compact button::after,
+.auth-panel button[type="submit"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,.28) 50%, transparent 80%);
+  transform: translateX(-120%);
+}
+
+.primary-action:hover::after,
+.full-action:hover::after,
+.primary-inline:hover::after,
+.form-panel button[type="submit"]:hover::after,
+.compact button:hover::after,
+.auth-panel button[type="submit"]:hover::after {
+  animation: shimmer-line .75s ease;
+}
+
+.sidebar a {
+  position: relative;
+}
+
+.sidebar a.active {
+  box-shadow: inset 3px 0 0 #2563eb;
+}
+
+.sidebar a.active svg,
+.sidebar a:hover svg {
+  transform: scale(1.06);
+  transition: transform .16s ease;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, .86);
+}
+
+.top-search,
+.resource-search,
+input,
+select,
+textarea,
+.money-input {
+  transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+
+.top-search:focus-within,
+.resource-search:focus-within,
+input:focus,
+select:focus,
+textarea:focus,
+.money-input:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+  outline: 0;
+}
+
+.alert-button span {
+  animation: soft-pop .2s ease both, pulse-ring 2.4s ease-in-out infinite;
+}
+
+.user-menu,
+.confirm-modal,
+.quick-modal,
+.toast {
+  animation: soft-pop .18s ease both;
+}
+
+.modal-backdrop {
+  animation: fade-up .16s ease both;
+}
+
+.toast {
+  border: 1px solid rgba(255,255,255,.22);
+}
+
+.auth-page {
+  background:
+    linear-gradient(135deg, rgba(15, 31, 51, .98), rgba(37, 99, 235, .92), rgba(16, 185, 129, .78)),
+    #0f1f33;
+  background-size: 180% 180%;
+  animation: auth-sheen 12s ease-in-out infinite;
+}
+
+.auth-panel {
+  animation: fade-up .38s ease both;
+  border: 1px solid rgba(255,255,255,.38);
+}
+
+.auth-copy {
+  animation: fade-up .42s ease both;
+}
+
+.auth-logo-mark {
+  box-shadow: 0 18px 44px rgba(15, 23, 42, .25);
+  animation: pulse-ring 3.2s ease-in-out infinite;
+}
+
+.auth-highlights span {
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.18);
+}
+
+.status-badge {
+  transition: transform .16s ease, filter .16s ease;
+}
+
+.status-badge:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.12);
+}
+
+.due-list div,
+.calendar-event,
+.alert,
+.onboarding-step {
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+
+.due-list div:hover,
+.calendar-event:hover,
+.alert:hover,
+.onboarding-step:hover {
+  transform: translateY(-2px);
+  border-color: #dbeafe;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, .06);
+}
+
+.onboarding-hero-full {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0f1f33, #2563eb 58%, #10b981);
+}
+
+.onboarding-hero-full::after {
+  content: "";
+  position: absolute;
+  inset: auto -20% -45% 20%;
+  height: 160px;
+  background: rgba(255,255,255,.08);
+  transform: rotate(-4deg);
+}
+
+.onboarding-hero-full > * {
+  position: relative;
+  z-index: 1;
+}
+
+.progress-ring {
+  animation: pulse-ring 3s ease-in-out infinite;
+}
+
+.empty-panel {
+  background: linear-gradient(135deg, rgba(248,250,252,.72), rgba(239,246,255,.72));
+}
+
+.dark-theme .topbar {
+  background: rgba(17, 24, 39, .86);
+}
+
+.dark-theme .metric-card:hover,
+.dark-theme .panel:hover,
+.dark-theme .status-card:hover {
+  border-color: #334155;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, .24);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
