@@ -223,7 +223,7 @@ p { color: #64748b; line-height: 1.55; }
 .due-list { display: grid; gap: 10px; }
 .due-list div {
   display: grid;
-  grid-template-columns: 46px 1fr auto;
+  grid-template-columns: 46px 1fr auto auto;
   gap: 10px;
   align-items: center;
   padding: 10px;
@@ -234,6 +234,15 @@ p { color: #64748b; line-height: 1.55; }
 .due-list b small { color: #64748b; font-size: 10px; }
 .due-list span { color: #334155; font-weight: 800; }
 .due-list strong { font-size: 13px; }
+.pay-shortcut {
+  color: #1d4ed8;
+  background: #eef2ff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
 .action-card ol { list-style: none; padding: 0; margin: 12px 0 18px; display: grid; gap: 10px; }
 .action-card li { display: flex; align-items: center; gap: 10px; color: #475569; font-weight: 800; font-size: 13px; }
 .action-card li span {
@@ -425,6 +434,24 @@ input, select, textarea {
   background: #fff;
   color: #172033;
 }
+.money-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+.money-input span {
+  padding: 0 10px;
+  color: #64748b;
+  font-weight: 900;
+}
+.money-input input {
+  border: 0;
+  border-radius: 0;
+}
+.money-input:focus-within { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, .12); }
 textarea { min-height: 96px; resize: vertical; }
 .span-2 { grid-column: span 2; }
 .form-panel button[type="submit"] { margin-top: 14px; }
@@ -486,6 +513,39 @@ pre { white-space: pre-wrap; background: #0f172a; color: #e2e8f0; padding: 18px;
   .quick-action-bar a { width: 100%; justify-content: center; }
 }
 
+@media (max-width: 980px) {
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(320px, 86vw);
+    z-index: 900;
+    transform: translateX(-105%);
+    transition: transform .2s ease;
+    box-shadow: 24px 0 50px rgba(15, 23, 42, .18);
+  }
+  .menu-open .sidebar { transform: translateX(0); }
+  .mobile-scrim {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .38);
+    z-index: 850;
+  }
+  .menu-open .mobile-scrim { display: block; }
+  .content { min-height: 100vh; }
+  .sidebar nav { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 981px) {
+  .mobile-scrim { display: none; }
+}
+
+@media (max-width: 620px) {
+  .due-list div { grid-template-columns: 44px 1fr; }
+  .due-list strong,
+  .pay-shortcut { grid-column: 2; justify-self: start; }
+}
+
 .success-box { color: #166534; background: #dcfce7; padding: 10px; border-radius: 8px; font-size: 13px; word-break: break-word; }
 .export-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 .export-row button {
@@ -519,11 +579,13 @@ pre { white-space: pre-wrap; background: #0f172a; color: #e2e8f0; padding: 18px;
 .dark-theme input,
 .dark-theme select,
 .dark-theme textarea,
-.dark-theme .top-search {
+.dark-theme .top-search,
+.dark-theme .money-input {
   background: #0b1220;
   border-color: #334155;
   color: #e5e7eb;
 }
+.dark-theme .money-input span { color: #a8b3c7; }
 .dark-theme p,
 .dark-theme small,
 .dark-theme .topbar span,

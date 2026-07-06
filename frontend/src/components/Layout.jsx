@@ -29,6 +29,7 @@ const nav = [
 export function Layout() {
   const { user, logout } = useAuth();
   const [health, setHealth] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     api.get('/settings').then((response) => {
@@ -38,7 +39,8 @@ export function Layout() {
   }, []);
 
   return (
-    <div className="app-shell">
+    <div className={menuOpen ? 'app-shell menu-open' : 'app-shell'}>
+      <button className="mobile-scrim" aria-label="Fechar menu" onClick={() => setMenuOpen(false)} />
       <aside className="sidebar">
         <div className="brand">
           <Gauge size={28} />
@@ -49,7 +51,7 @@ export function Layout() {
         </div>
         <nav>
           {nav.map(([to, label, Icon]) => (
-            <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => isActive ? 'active' : ''}>
+            <NavLink key={to} to={to} end={to === '/'} onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}>
               <Icon size={18} />
               {label}
             </NavLink>
@@ -65,7 +67,7 @@ export function Layout() {
       </aside>
       <main className="content">
         <header className="topbar">
-          <button className="ghost-icon" aria-label="Abrir menu"><Menu size={21} /></button>
+          <button className="ghost-icon" aria-label="Abrir menu" onClick={() => setMenuOpen(true)}><Menu size={21} /></button>
           <div className="top-search">
             <Search size={18} />
             <input placeholder="Buscar no sistema..." />

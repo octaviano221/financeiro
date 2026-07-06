@@ -209,6 +209,7 @@ export function Dashboard() {
                     <b>{date.toLocaleDateString('pt-BR', { day: '2-digit' })}<small>{date.toLocaleDateString('pt-BR', { month: 'short' })}</small></b>
                     <span>{item.description}</span>
                     <strong>{money.format(item.amount)}</strong>
+                    <Link to="/pagamentos" className="pay-shortcut">Pagar</Link>
                   </div>
                 );
               })}

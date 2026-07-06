@@ -116,7 +116,10 @@ export function ResourcePage({ resource }) {
                     ))}
                   </select>
                 ) : (
-                  <input type={type} step={type === 'number' ? '0.01' : undefined} value={form[name] ?? ''} onChange={(e) => setForm({ ...form, [name]: e.target.value })} />
+                  <div className={type === 'number' && isMoneyField(name) ? 'money-input' : ''}>
+                    {type === 'number' && isMoneyField(name) && <span>R$</span>}
+                    <input type={type} step={type === 'number' ? '0.01' : undefined} placeholder={type === 'number' && isMoneyField(name) ? '0,00' : undefined} value={form[name] ?? ''} onChange={(e) => setForm({ ...form, [name]: e.target.value })} />
+                  </div>
                 )}
               </label>
             ))}
@@ -153,6 +156,10 @@ export function ResourcePage({ resource }) {
 
 function relationLabel(item) {
   return item.name || item.bank_name || item.card_name || item.description || item.goal_name || `Registro ${item.id}`;
+}
+
+function isMoneyField(name) {
+  return ['amount', 'current_balance', 'overdraft_limit', 'overdraft_used', 'total_limit', 'used_limit', 'current_invoice_value', 'minimum_payment_value', 'original_amount', 'current_amount', 'installment_value', 'target_amount', 'current_amount'].includes(name);
 }
 
 function formatCell(value) {
