@@ -283,6 +283,19 @@ p { color: #64748b; line-height: 1.55; }
   border-color: #bfdbfe;
   background: #f8fbff;
 }
+.dashboard-error {
+  margin-bottom: 18px;
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+.dashboard-error strong { color: #991b1b; }
+.dashboard-error button {
+  background: #dc2626;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-weight: 800;
+}
 .onboarding-actions {
   display: flex;
   gap: 10px;

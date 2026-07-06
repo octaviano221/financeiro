@@ -13,22 +13,42 @@ export function Dashboard() {
   const [alerts, setAlerts] = useState([]);
   const [health, setHealth] = useState(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     loadDashboard();
   }, []);
 
   async function loadDashboard() {
-    const [summaryRes, chartsRes, alertsRes, healthRes] = await Promise.all([
+    setError('');
+    const [summaryRes, chartsRes, alertsRes, healthRes] = await Promise.allSettled([
       api.get('/dashboard/summary'),
       api.get('/dashboard/charts'),
       api.get('/dashboard/alerts'),
       api.get('/dashboard/financial-health')
     ]);
-    setSummary(summaryRes.data);
-    setCharts(chartsRes.data);
-    setAlerts(alertsRes.data);
-    setHealth(healthRes.data);
+
+    if (summaryRes.status === 'fulfilled') {
+      setSummary(summaryRes.value.data);
+    } else {
+      setError('Nao foi possivel carregar o resumo financeiro. Confira se as tabelas do banco foram criadas e se as variaveis DB_* estao corretas.');
+      setSummary({
+        totalBankBalance: 0,
+        totalDebts: 0,
+        totalOverdraftUsed: 0,
+        totalCardOpen: 0,
+        monthlyIncome: 0,
+        monthlyExpenses: 0,
+        upcomingBills: 0,
+        overdueBills: 0,
+        incomeCommitmentPercent: 0,
+        expectedMonthlyBalance: 0
+      });
+    }
+
+    setCharts(chartsRes.status === 'fulfilled' ? chartsRes.value.data : { cashFlow: [], debts: [], expensesByCategory: [] });
+    setAlerts(alertsRes.status === 'fulfilled' ? alertsRes.value.data : []);
+    setHealth(healthRes.status === 'fulfilled' ? healthRes.value.data : { score: 0, classification: 'atencao', message: 'Saude financeira indisponivel enquanto o banco nao responde.' });
   }
 
   async function seedDemo() {
@@ -83,6 +103,14 @@ export function Dashboard() {
           <Link to="/receitas" className="primary-action"><Plus size={16} /> Acao rapida</Link>
         </div>
       </div>
+
+      {error && (
+        <article className="panel dashboard-error">
+          <strong>Dashboard parcialmente indisponivel</strong>
+          <p>{error}</p>
+          <button onClick={loadDashboard}>Tentar novamente</button>
+        </article>
+      )}
 
       {!hasFinancialData && (
         <article className="panel onboarding-panel">
