@@ -905,13 +905,13 @@ textarea { min-height: 96px; resize: vertical; }
 .resource-search input { border: 0; outline: 0; padding: 0; }
 .resource-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 14px;
   margin-bottom: 16px;
 }
 .resource-card {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   background: #fff;
@@ -937,24 +937,29 @@ textarea { min-height: 96px; resize: vertical; }
 }
 .resource-card-main h2 {
   margin: 2px 0;
-  font-size: 17px;
+  font-size: 18px;
+  line-height: 1.25;
   overflow-wrap: anywhere;
 }
 .resource-card-main p {
   margin: 0;
   color: #64748b;
   font-size: 13px;
+  font-weight: 800;
 }
 .resource-card-value {
-  display: grid;
-  justify-items: end;
-  gap: 5px;
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 .resource-card-value strong {
   font-size: 16px;
   white-space: nowrap;
 }
 .resource-card-actions {
+  grid-column: 2;
   display: flex;
   gap: 8px;
 }
@@ -1108,8 +1113,10 @@ pre { white-space: pre-wrap; background: #0f172a; color: #e2e8f0; padding: 18px;
   .monthly-expense-list i,
   .pay-expense-button,
   .repeat-expense-button { justify-self: start; }
+  .resource-card-grid { grid-template-columns: 1fr; }
   .resource-card { grid-template-columns: 1fr; }
-  .resource-card-value { justify-items: start; }
+  .resource-card-value,
+  .resource-card-actions { grid-column: 1; }
   .resource-card-actions { justify-content: flex-start; }
 }
 

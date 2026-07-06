@@ -66,12 +66,21 @@ export const resources = [
     title: 'Compras no Cartao',
     action: 'Nova compra',
     columns: ['description', 'amount', 'purchase_date', 'installments', 'current_installment', 'status'],
+    columnLabels: {
+      description: 'Compra',
+      amount: 'Valor da parcela',
+      purchase_date: 'Vencimento',
+      installments: 'Total de parcelas',
+      current_installment: 'Parcela',
+      status: 'Status'
+    },
     fields: [
       ['credit_card_id', 'Cartao', 'relation', 'credit-cards'],
-      ['description', 'Descricao'],
-      ['amount', 'Valor total', 'number'],
+      ['description', 'Nome da compra'],
+      ['amount', 'Valor total da compra', 'number'],
       ['purchase_date', 'Data da compra', 'date'],
-      ['installments', 'Parcelas', 'number'],
+      ['installments', 'Total de parcelas', 'number'],
+      ['paid_installments', 'Parcelas ja pagas', 'number', null, { createOnly: true }],
       ['current_installment', 'Parcela atual', 'number'],
       ['category_id', 'Categoria', 'relation', 'categories'],
       ['status', 'Status', 'select', ['aberta', 'paga', 'cancelada']]

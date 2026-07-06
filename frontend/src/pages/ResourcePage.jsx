@@ -3,7 +3,7 @@ import { BarChart3, CheckCircle2, Edit3, Plus, Search, Trash2, WalletCards, X } 
 import { api } from '../api/client.js';
 import { useToast } from '../state/ToastContext.jsx';
 import { useConfirm } from '../state/ConfirmContext.jsx';
-import { normalizePayload } from '../utils/format.js';
+import { dateBr, normalizePayload } from '../utils/format.js';
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -16,7 +16,11 @@ export function ResourcePage({ resource }) {
   const [search, setSearch] = useState('');
   const { showToast } = useToast();
   const { confirm } = useConfirm();
-  const columnLabels = Object.fromEntries(resource.fields.map(([name, label]) => [name, label]));
+  const columnLabels = {
+    ...Object.fromEntries(resource.fields.map(([name, label]) => [name, label])),
+    ...(resource.columnLabels || {})
+  };
+  const visibleFields = resource.fields.filter((field) => !(editing && field[4]?.createOnly));
 
   useEffect(() => {
     load();
@@ -39,7 +43,7 @@ export function ResourcePage({ resource }) {
 
   function openForm(item = {}) {
     setEditing(item.id ? item : null);
-    const initial = Object.fromEntries(resource.fields.map(([name, , type, opts]) => {
+    const initial = Object.fromEntries(resource.fields.filter((field) => !(item.id && field[4]?.createOnly)).map(([name, , type, opts]) => {
       if (Object.prototype.hasOwnProperty.call(item, name)) return [name, item[name] ?? ''];
       if (type === 'checkbox') return [name, false];
       if (type === 'select') return [name, opts[0] ?? ''];
@@ -138,7 +142,7 @@ export function ResourcePage({ resource }) {
               <button type="button" className="icon-button" onClick={() => { setForm({}); setEditing(null); setFormOpen(false); }} aria-label="Fechar"><X size={18} /></button>
             </div>
             <div className="form-grid quick-form-grid">
-              {resource.fields.map(([name, label, type = 'text', fieldOptions]) => (
+              {visibleFields.map(([name, label, type = 'text', fieldOptions]) => (
                 <label key={name} className={type === 'textarea' ? 'span-2' : ''}>
                   <span>{label}</span>
                   {type === 'select' ? (
@@ -186,7 +190,7 @@ export function ResourcePage({ resource }) {
                   <p>{card.subtitle}</p>
                 </div>
                 <div className="resource-card-value">
-                  {card.amount && <strong>{formatCell(card.amount.value)}</strong>}
+                  {card.amount && <strong>{formatMoneyValue(card.amount.value)}</strong>}
                   {card.status && <span>{formatCell(card.status.value)}</span>}
                 </div>
                 <div className="resource-card-actions">
@@ -210,7 +214,7 @@ export function ResourcePage({ resource }) {
           <tbody>
             {filteredItems.map((item) => (
               <tr key={item.id}>
-                {resource.columns.map((column) => <td key={column}>{formatCell(item[column])}</td>)}
+                {resource.columns.map((column) => <td key={column}>{formatTableCell(item, column, resource)}</td>)}
                 <td className="actions">
                   <button className="icon-button" onClick={() => openForm(item)}><Edit3 size={16} /></button>
                   <button className="icon-button danger" onClick={() => remove(item.id)}><Trash2 size={16} /></button>
@@ -238,8 +242,28 @@ function formatCell(value) {
   if (value === null || value === undefined) return '-';
   if (typeof value === 'number') return value > 999 || String(value).includes('.') ? money.format(value) : value;
   if (typeof value === 'boolean') return value ? 'Sim' : 'Nao';
+  if (isDateValue(value)) return dateBr(value);
   if (isStatusValue(value)) return <span className={`status-badge ${String(value).replaceAll('_', '-')}`}>{prettyText(value)}</span>;
   return String(value);
+}
+
+function formatTableCell(item, column, resource) {
+  if (resource.endpoint === 'card-transactions') {
+    if (column === 'amount') return formatMoneyValue(item[column]);
+    if (column === 'purchase_date') return dateBr(item[column]);
+    if (column === 'installments') return `${Number(item[column] || 1)}x`;
+    if (column === 'current_installment') return `${Number(item.current_installment || 1)} de ${Number(item.installments || 1)}`;
+  }
+  return formatCell(item[column]);
+}
+
+function formatMoneyValue(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? money.format(number) : formatCell(value);
+}
+
+function isDateValue(value) {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value);
 }
 
 function isStatusValue(value) {
@@ -262,6 +286,17 @@ function prettyColumn(column) {
 }
 
 function buildResourceCard(item, resource, columnLabels) {
+  if (resource.endpoint === 'card-transactions') {
+    const installment = Number(item.current_installment || 1);
+    const installments = Number(item.installments || 1);
+    return {
+      title: item.description || `Compra ${item.id}`,
+      subtitle: `Parcela ${installment} de ${installments} - ${dateBr(item.purchase_date)}`,
+      amount: { label: 'Valor da parcela', value: item.amount },
+      status: { label: 'Status', value: item.status || 'aberta' }
+    };
+  }
+
   const columns = resource.columns;
   const titleColumn = columns[0];
   const subtitleColumn = columns.find((column) => column !== titleColumn && !isMoneyField(column) && !isStatusValue(item[column])) || columns[1];

@@ -74,6 +74,7 @@ export async function create(resourceName, userId, payload) {
 
 async function createCardInstallments(userId, payload) {
   const installments = Math.max(1, Number(payload.installments || 1));
+  const paidInstallments = Math.max(0, Math.min(installments, Number(payload.paid_installments || 0)));
   const totalAmount = toNumber(payload.amount);
   const installmentAmount = roundMoney(totalAmount / installments);
   const purchaseDate = new Date(payload.purchase_date);
@@ -86,12 +87,13 @@ async function createCardInstallments(userId, payload) {
       ...payload,
       amount: installmentAmount,
       purchase_date: dueDate.toISOString().slice(0, 10),
-      current_installment: index
+      current_installment: index,
+      status: index <= paidInstallments ? 'paga' : 'aberta'
     };
     const result = await query(
       `INSERT INTO card_transactions (user_id, credit_card_id, description, amount, purchase_date, installments, current_installment, category_id, status)
        VALUES (:userId, :credit_card_id, :description, :amount, :purchase_date, :installments, :current_installment, :category_id, :status)`,
-      { userId, status: 'aberta', category_id: null, ...item }
+      { userId, category_id: null, ...item }
     );
     const rows = await query('SELECT * FROM card_transactions WHERE id = :id AND user_id = :userId', { id: result.insertId, userId });
     created.push(rows[0]);
@@ -99,10 +101,15 @@ async function createCardInstallments(userId, payload) {
 
   await query(
     `UPDATE credit_cards
-     SET used_limit = used_limit + :totalAmount,
-         current_invoice_value = current_invoice_value + :installmentAmount
+     SET used_limit = used_limit + :openAmount,
+         current_invoice_value = current_invoice_value + :nextInvoiceAmount
      WHERE id = :creditCardId AND user_id = :userId`,
-    { totalAmount, installmentAmount, creditCardId: payload.credit_card_id, userId }
+    {
+      openAmount: roundMoney(installmentAmount * Math.max(0, installments - paidInstallments)),
+      nextInvoiceAmount: paidInstallments >= installments ? 0 : installmentAmount,
+      creditCardId: payload.credit_card_id,
+      userId
+    }
   );
 
   return { installments: created };
