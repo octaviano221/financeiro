@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Banknote, CalendarDays, CreditCard, HandCoins, HeartPulse, Landmark, Plus, Receipt, ShieldAlert, ShoppingCart, Target, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Banknote, Calculator, CalendarDays, CreditCard, HandCoins, HeartPulse, Landmark, Plus, Receipt, ShieldAlert, ShoppingCart, Target, Trash2, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api } from '../api/client.js';
 import { QuickCreateModal } from '../components/QuickCreateModal.jsx';
@@ -124,6 +124,7 @@ export function Dashboard() {
   const hasDebtChart = (charts?.debts || []).length > 0;
   const hasCategoryChart = (charts?.expensesByCategory || []).length > 0;
   const debtPriorityData = buildDebtPriorityData(charts?.debts || []);
+  const monthlyPlan = buildMonthlyPlan(summary);
   const planSteps = buildPlanSteps(summary);
   const expenseResource = resources.find((resource) => resource.endpoint === 'expenses');
   const quickResources = [
@@ -171,6 +172,44 @@ export function Dashboard() {
           </div>
         </article>
       )}
+
+      <article className={`monthly-command ${monthlyPlan.tone}`}>
+        <div className="monthly-command-main">
+          <span><Calculator size={22} /></span>
+          <div>
+            <small>Plano do mes</small>
+            <h2>{monthlyPlan.title}</h2>
+            <p>{monthlyPlan.message}</p>
+          </div>
+        </div>
+        <div className="monthly-command-grid">
+          <div>
+            <small>Receita prevista</small>
+            <strong>{money.format(summary.monthlyIncome || 0)}</strong>
+            <em>{money.format(summary.receivedIncome || 0)} ja recebido</em>
+          </div>
+          <div>
+            <small>Falta pagar</small>
+            <strong>{money.format(summary.essentialOutflow || 0)}</strong>
+            <em>{money.format(summary.openExpenses || 0)} em contas abertas</em>
+          </div>
+          <div>
+            <small>Previsao final</small>
+            <strong>{money.format(summary.projectedCashBalance ?? summary.expectedMonthlyBalance ?? 0)}</strong>
+            <em>{monthlyPlan.balanceLabel}</em>
+          </div>
+          <div>
+            <small>Pode gastar por dia</small>
+            <strong>{money.format(summary.dailySafeSpend || 0)}</strong>
+            <em>{summary.daysRemainingInMonth || 1} dia(s) restantes</em>
+          </div>
+        </div>
+        <div className="monthly-command-actions">
+          <button onClick={() => setQuickResource(resources.find((resource) => resource.endpoint === 'incomes'))}><Wallet size={16} /> Adicionar salario</button>
+          {expenseResource && <button onClick={() => setQuickResource(expenseResource)}><ShoppingCart size={16} /> Adicionar gasto</button>}
+          <Link to="/gastos-mensais">Ver gastos mensais</Link>
+        </div>
+      </article>
 
       <div className="metric-grid dashboard-metrics">
         {cards.map(([label, value, Icon, tone]) => (
@@ -362,6 +401,42 @@ function buildDebtPriorityData(debts) {
   const total = debts.reduce((sum, item) => sum + Number(item.valor || 0), 0);
   if (!total) return [];
   return debts.map((item) => ({ name: item.name, value: item.valor }));
+}
+
+function buildMonthlyPlan(summary) {
+  const balance = Number(summary.projectedCashBalance ?? summary.expectedMonthlyBalance ?? 0);
+  const income = Number(summary.monthlyIncome || 0);
+  const commitment = Number(summary.incomeCommitmentPercent || 0);
+  if (!income) {
+    return {
+      tone: 'attention',
+      title: 'Cadastre seu salario para prever o mes',
+      message: 'Com a receita cadastrada, o sistema mostra se voce termina no verde ou no vermelho.',
+      balanceLabel: 'sem renda cadastrada'
+    };
+  }
+  if (balance < 0) {
+    return {
+      tone: 'danger',
+      title: 'Este mes tende a fechar no vermelho',
+      message: `Faltam ${money.format(Math.abs(balance))} na previsao. Priorize contas essenciais e reduza gastos variaveis.`,
+      balanceLabel: 'risco de faltar dinheiro'
+    };
+  }
+  if (commitment >= 70) {
+    return {
+      tone: 'warning',
+      title: 'Voce fecha no verde, mas apertado',
+      message: 'A renda esta muito comprometida. O ideal e baixar fatura, parcelas ou gastos variaveis.',
+      balanceLabel: 'sobra pequena com risco'
+    };
+  }
+  return {
+    tone: 'good',
+    title: 'Este mes tende a fechar no verde',
+    message: 'A previsao esta positiva. Continue registrando gastos para manter o controle real.',
+    balanceLabel: 'sobra prevista'
+  };
 }
 
 function buildPlanSteps(summary) {

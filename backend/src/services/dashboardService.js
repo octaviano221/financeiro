@@ -8,6 +8,12 @@ function currentMonthRange() {
   return { start, end };
 }
 
+function daysRemainingInMonth() {
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return Math.max(1, end.getDate() - now.getDate() + 1);
+}
+
 export async function getFinancialSnapshot(userId) {
   const { start, end } = currentMonthRange();
   const [banks, cards, debts, incomes, expenses, goals] = await Promise.all([
@@ -26,12 +32,21 @@ export async function getFinancialSnapshot(userId) {
   const totalDebts = debts.filter((item) => item.status !== 'quitada').reduce((sum, item) => sum + toNumber(item.current_amount), 0);
   const totalLoans = debts.filter((item) => ['emprestimo_pessoal', 'financiamento'].includes(item.debt_type)).reduce((sum, item) => sum + toNumber(item.current_amount), 0);
   const monthlyIncome = incomes.filter((item) => item.status !== 'cancelado').reduce((sum, item) => sum + toNumber(item.amount), 0);
+  const receivedIncome = incomes.filter((item) => item.status === 'recebido').reduce((sum, item) => sum + toNumber(item.amount), 0);
+  const pendingIncome = incomes.filter((item) => item.status !== 'recebido' && item.status !== 'cancelado').reduce((sum, item) => sum + toNumber(item.amount), 0);
   const monthlyExpenses = expenses.filter((item) => item.status !== 'cancelado').reduce((sum, item) => sum + toNumber(item.amount), 0);
+  const paidExpenses = expenses.filter((item) => item.status === 'pago').reduce((sum, item) => sum + toNumber(item.amount), 0);
+  const openExpenses = expenses.filter((item) => item.status === 'aberto' || item.status === 'vencido').reduce((sum, item) => sum + toNumber(item.amount), 0);
   const overdueExpenses = expenses.filter((item) => item.status === 'vencido' || (item.status === 'aberto' && new Date(item.due_date) < new Date()));
   const upcomingExpenses = expenses.filter((item) => item.status === 'aberto' && new Date(item.due_date) >= new Date());
   const debtInstallments = debts.filter((item) => item.status !== 'quitada').reduce((sum, item) => sum + toNumber(item.installment_value), 0);
   const commitment = monthlyIncome > 0 ? ((monthlyExpenses + debtInstallments + totalCardOpen) / monthlyIncome) * 100 : 0;
   const cardUsage = totalCardLimit > 0 ? (cards.reduce((sum, item) => sum + toNumber(item.used_limit), 0) / totalCardLimit) * 100 : 0;
+  const expectedMonthlyBalance = monthlyIncome - monthlyExpenses - debtInstallments - totalCardOpen;
+  const projectedCashBalance = totalBankBalance + pendingIncome - openExpenses - debtInstallments - totalCardOpen;
+  const essentialOutflow = openExpenses + debtInstallments + totalCardOpen;
+  const freeToSpend = Math.max(0, projectedCashBalance);
+  const daysLeft = daysRemainingInMonth();
 
   const score = calculateHealthScore({ totalOverdraftUsed, overdueExpenses, cardUsage, commitment, monthlyIncome, monthlyExpenses, debts, goals });
   const alerts = buildAlerts({ banks, cards, debts, monthlyIncome, monthlyExpenses, totalCardOpen, commitment, overdueExpenses, upcomingExpenses });
@@ -52,8 +67,18 @@ export async function getFinancialSnapshot(userId) {
       overdueBills: overdueExpenses.length,
       upcomingBills: upcomingExpenses.length,
       monthlyIncome: roundMoney(monthlyIncome),
+      receivedIncome: roundMoney(receivedIncome),
+      pendingIncome: roundMoney(pendingIncome),
       monthlyExpenses: roundMoney(monthlyExpenses),
-      expectedMonthlyBalance: roundMoney(monthlyIncome - monthlyExpenses - debtInstallments - totalCardOpen),
+      paidExpenses: roundMoney(paidExpenses),
+      openExpenses: roundMoney(openExpenses),
+      debtInstallments: roundMoney(debtInstallments),
+      expectedMonthlyBalance: roundMoney(expectedMonthlyBalance),
+      projectedCashBalance: roundMoney(projectedCashBalance),
+      essentialOutflow: roundMoney(essentialOutflow),
+      freeToSpend: roundMoney(freeToSpend),
+      dailySafeSpend: roundMoney(freeToSpend / daysLeft),
+      daysRemainingInMonth: daysLeft,
       incomeCommitmentPercent: roundMoney(commitment),
       riskLevel: score.score <= 30 ? 'critico' : score.score <= 50 ? 'atencao' : score.score <= 70 ? 'regular' : score.score <= 85 ? 'bom' : 'excelente'
     },
