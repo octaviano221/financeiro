@@ -12,30 +12,41 @@ export function Dashboard() {
   const [charts, setCharts] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [health, setHealth] = useState(null);
+  const [loadingDemo, setLoadingDemo] = useState(false);
 
   useEffect(() => {
-    Promise.all([
+    loadDashboard();
+  }, []);
+
+  async function loadDashboard() {
+    const [summaryRes, chartsRes, alertsRes, healthRes] = await Promise.all([
       api.get('/dashboard/summary'),
       api.get('/dashboard/charts'),
       api.get('/dashboard/alerts'),
       api.get('/dashboard/financial-health')
-    ]).then(([summaryRes, chartsRes, alertsRes, healthRes]) => {
-      setSummary(summaryRes.data);
-      setCharts(chartsRes.data);
-      setAlerts(alertsRes.data);
-      setHealth(healthRes.data);
-    });
-  }, []);
+    ]);
+    setSummary(summaryRes.data);
+    setCharts(chartsRes.data);
+    setAlerts(alertsRes.data);
+    setHealth(healthRes.data);
+  }
+
+  async function seedDemo() {
+    setLoadingDemo(true);
+    await api.post('/demo/seed');
+    await loadDashboard();
+    setLoadingDemo(false);
+  }
 
   if (!summary) return <div className="page">Carregando dashboard...</div>;
 
   const cards = [
-    ['Saldo em Bancos', summary.totalBankBalance, Landmark, 'positive', '12,5% vs mes anterior'],
-    ['Total de Dividas', summary.totalDebts, Receipt, 'danger', '2,7% vs mes anterior'],
-    ['Cheque Especial', summary.totalOverdraftUsed, ShieldAlert, 'warning', '0,0% vs mes anterior'],
-    ['Cartao de Credito', summary.totalCardOpen, CreditCard, 'purple', '8,3% vs mes anterior'],
-    ['Receitas do Mes', summary.monthlyIncome, TrendingUp, 'positive', '5,3% vs mes anterior'],
-    ['Despesas do Mes', summary.monthlyExpenses, TrendingDown, 'danger', '3,1% vs mes anterior']
+    ['Saldo em Bancos', summary.totalBankBalance, Landmark, 'positive'],
+    ['Total de Dividas', summary.totalDebts, Receipt, 'danger'],
+    ['Cheque Especial', summary.totalOverdraftUsed, ShieldAlert, 'warning'],
+    ['Cartao de Credito', summary.totalCardOpen, CreditCard, 'purple'],
+    ['Receitas do Mes', summary.monthlyIncome, TrendingUp, 'positive'],
+    ['Despesas do Mes', summary.monthlyExpenses, TrendingDown, 'danger']
   ];
   const statusCards = [
     ['Contas a Vencer', summary.upcomingBills, CalendarDays, 'purple'],
@@ -44,13 +55,21 @@ export function Dashboard() {
     ['Saldo Previsto', summary.expectedMonthlyBalance, Banknote, summary.expectedMonthlyBalance >= 0 ? 'positive' : 'danger'],
     ['Saude Financeira', `${health.score} / 100`, HeartPulse, 'positive']
   ];
-  const upcoming = [
-    ['20', 'Fatura Cartao', summary.totalCardOpen || 0],
-    ['22', 'Conta de Luz', 180.9],
-    ['25', 'Plano de Saude', 450],
-    ['30', 'Financiamento', 980]
-  ];
-  const planSteps = ['Quitar o cheque especial', 'Negociar dividas vencidas', 'Reduzir uso do cartao', 'Cortar despesas nao essenciais', 'Criar reserva de emergencia'];
+  const hasFinancialData = [
+    summary.totalBankBalance,
+    summary.totalDebts,
+    summary.totalOverdraftUsed,
+    summary.totalCardOpen,
+    summary.monthlyIncome,
+    summary.monthlyExpenses,
+    summary.upcomingBills,
+    summary.overdueBills
+  ].some((value) => Number(value) > 0);
+  const hasCashFlowChart = (charts?.cashFlow || []).length > 0;
+  const hasDebtChart = (charts?.debts || []).length > 0;
+  const hasCategoryChart = (charts?.expensesByCategory || []).length > 0;
+  const debtPriorityData = buildDebtPriorityData(charts?.debts || []);
+  const planSteps = buildPlanSteps(summary);
 
   return (
     <section className="page dashboard-page">
@@ -65,13 +84,28 @@ export function Dashboard() {
         </div>
       </div>
 
+      {!hasFinancialData && (
+        <article className="panel onboarding-panel">
+          <div>
+            <h2>Comece preenchendo sua vida financeira real</h2>
+            <p>Seu cadastro foi criado. Agora adicione bancos, receitas, despesas e dividas para o painel calcular tudo de verdade.</p>
+          </div>
+          <div className="onboarding-actions">
+            <Link to="/receitas"><Plus size={16} /> Primeira receita</Link>
+            <Link to="/despesas"><Plus size={16} /> Primeira despesa</Link>
+            <Link to="/bancos"><Landmark size={16} /> Primeiro banco</Link>
+            <button onClick={seedDemo} disabled={loadingDemo}>{loadingDemo ? 'Carregando...' : 'Carregar demo'}</button>
+          </div>
+        </article>
+      )}
+
       <div className="metric-grid dashboard-metrics">
-        {cards.map(([label, value, Icon, tone, delta]) => (
+        {cards.map(([label, value, Icon, tone]) => (
           <article className="metric-card" key={label}>
             <span className={tone}><Icon size={20} /></span>
             <small>{label}</small>
             <strong>{typeof value === 'number' ? money.format(value) : value}</strong>
-            <em className={tone === 'danger' ? 'down' : 'up'}>{delta}</em>
+            <em className="neutral">{hasFinancialData ? 'Atualizado com seus dados' : 'Sem dados cadastrados'}</em>
           </article>
         ))}
       </div>
@@ -80,29 +114,33 @@ export function Dashboard() {
         <div className="dashboard-main">
         <article className="panel">
           <div className="panel-head"><h2>Entradas x Saidas</h2><span>Ultimos 5 meses</span></div>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={charts?.cashFlow || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value) => money.format(value)} />
-              <Bar dataKey="entradas" fill="#16a34a" />
-              <Bar dataKey="saidas" fill="#dc2626" />
-            </BarChart>
-          </ResponsiveContainer>
+          {hasCashFlowChart ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={charts?.cashFlow || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip formatter={(value) => money.format(value)} />
+                <Bar dataKey="entradas" fill="#16a34a" />
+                <Bar dataKey="saidas" fill="#dc2626" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : <EmptyPanel text="Cadastre receitas e despesas para gerar este grafico." />}
         </article>
 
         <article className="panel">
           <div className="panel-head"><h2>Evolucao das Dividas</h2><span>Ultimos 5 meses</span></div>
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={charts?.debts?.length ? charts.debts : [{ name: 'Jan', valor: 15000 }, { name: 'Fev', valor: 18500 }, { name: 'Mar', valor: 16000 }, { name: 'Abr', valor: 15200 }, { name: 'Mai', valor: summary.totalDebts }]}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip formatter={(value) => money.format(value)} />
-              <Line type="monotone" dataKey="valor" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          {hasDebtChart ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={charts.debts}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip formatter={(value) => money.format(value)} />
+                <Line type="monotone" dataKey="valor" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : <EmptyPanel text="Cadastre dividas para acompanhar a evolucao." />}
         </article>
 
         <div className="status-strip">
@@ -117,35 +155,35 @@ export function Dashboard() {
 
         <article className="panel">
           <div className="panel-head"><h2>Gastos por Categoria</h2><span>Mes atual</span></div>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie data={charts?.expensesByCategory || []} dataKey="value" nameKey="name" outerRadius={85}>
-                {(charts?.expensesByCategory || []).map((entry, index) => <Cell key={entry.name} fill={colors[index % colors.length]} />)}
-              </Pie>
-              <Tooltip formatter={(value) => money.format(value)} />
-            </PieChart>
-          </ResponsiveContainer>
+          {hasCategoryChart ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie data={charts.expensesByCategory} dataKey="value" nameKey="name" outerRadius={85}>
+                  {charts.expensesByCategory.map((entry, index) => <Cell key={entry.name} fill={colors[index % colors.length]} />)}
+                </Pie>
+                <Tooltip formatter={(value) => money.format(value)} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : <EmptyPanel text="Cadastre despesas com categoria para visualizar seus gastos." />}
         </article>
 
         <article className="panel">
           <div className="panel-head"><h2>Proximos vencimentos</h2><Link to="/despesas">Ver calendario</Link></div>
-          <div className="due-list">
-            {upcoming.map(([day, label, value]) => (
-              <div key={`${day}-${label}`}><b>{day}<small>MAI</small></b><span>{label}</span><strong>{money.format(value)}</strong></div>
-            ))}
-          </div>
+          <EmptyPanel text="Cadastre despesas, faturas ou dividas com vencimento para listar aqui." compact />
         </article>
 
         <article className="panel">
           <div className="panel-head"><h2>Dividas por prioridade</h2></div>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie data={[{ name: 'Urgente', value: 40 }, { name: 'Alta', value: 30 }, { name: 'Media', value: 20 }, { name: 'Baixa', value: 10 }]} dataKey="value" nameKey="name" innerRadius={52} outerRadius={86}>
-                {colors.map((color) => <Cell key={color} fill={color} />)}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          {debtPriorityData.length ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie data={debtPriorityData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={86}>
+                  {debtPriorityData.map((entry, index) => <Cell key={entry.name} fill={colors[index % colors.length]} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : <EmptyPanel text="Cadastre dividas para calcular prioridades." />}
         </article>
         </div>
 
@@ -165,7 +203,7 @@ export function Dashboard() {
 
         <article className="panel action-card">
           <div className="panel-head"><h2>Plano de acao recomendado</h2><Link to="/plano-de-acao">Ver plano completo</Link></div>
-          <p>Com base na sua situacao financeira, recomendamos:</p>
+          <p>{hasFinancialData ? 'Com base na sua situacao financeira, recomendamos:' : 'Cadastre seus dados para gerar recomendacoes personalizadas.'}</p>
           <ol>
             {planSteps.map((step, index) => <li key={step}><span>{index + 1}</span>{step}</li>)}
           </ol>
@@ -185,4 +223,26 @@ export function Dashboard() {
       </div>
     </section>
   );
+}
+
+function EmptyPanel({ text, compact = false }) {
+  return <div className={compact ? 'empty-panel compact-empty' : 'empty-panel'}>{text}</div>;
+}
+
+function buildDebtPriorityData(debts) {
+  if (!debts.length) return [];
+  const total = debts.reduce((sum, item) => sum + Number(item.valor || 0), 0);
+  if (!total) return [];
+  return debts.map((item) => ({ name: item.name, value: item.valor }));
+}
+
+function buildPlanSteps(summary) {
+  const steps = [];
+  if (Number(summary.totalOverdraftUsed) > 0) steps.push('Regularizar o cheque especial');
+  if (Number(summary.totalCardOpen) > 0) steps.push('Organizar o pagamento da fatura do cartao');
+  if (Number(summary.overdueBills) > 0) steps.push('Priorizar contas vencidas');
+  if (Number(summary.totalDebts) > 0) steps.push('Gerar plano de acao para reduzir dividas');
+  if (Number(summary.monthlyIncome) === 0) steps.push('Cadastrar sua primeira receita mensal');
+  if (Number(summary.monthlyExpenses) === 0) steps.push('Cadastrar despesas fixas do mes');
+  return steps.slice(0, 5);
 }
