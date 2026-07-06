@@ -122,6 +122,7 @@ export function Dashboard() {
             <p>Seu cadastro foi criado. Agora adicione bancos, receitas, despesas e dividas para o painel calcular tudo de verdade.</p>
           </div>
           <div className="onboarding-actions">
+            <Link to="/primeiros-passos"><Target size={16} /> Guia completo</Link>
             <Link to="/receitas"><Plus size={16} /> Primeira receita</Link>
             <Link to="/despesas"><Plus size={16} /> Primeira despesa</Link>
             <Link to="/bancos"><Landmark size={16} /> Primeiro banco</Link>

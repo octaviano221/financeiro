@@ -17,6 +17,7 @@ const PaymentsPage = lazy(() => import('./pages/PaymentsPage.jsx').then((module)
 const AlertsPage = lazy(() => import('./pages/AlertsPage.jsx').then((module) => ({ default: module.AlertsPage })));
 const EmergencyPage = lazy(() => import('./pages/EmergencyPage.jsx').then((module) => ({ default: module.EmergencyPage })));
 const SystemStatusPage = lazy(() => import('./pages/SystemStatusPage.jsx').then((module) => ({ default: module.SystemStatusPage })));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage.jsx').then((module) => ({ default: module.OnboardingPage })));
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="alertas" element={<AlertsPage />} />
           <Route path="emergencia" element={<EmergencyPage />} />
           <Route path="status" element={<SystemStatusPage />} />
+          <Route path="primeiros-passos" element={<OnboardingPage />} />
           <Route path="simulador" element={<SimulatorPage />} />
           <Route path="calendario" element={<CalendarPage />} />
           <Route path="relatorios" element={<ReportsPage />} />

@@ -1,11 +1,12 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { BarChart3, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, CreditCard, Flag, Gauge, Home, LineChart, LogOut, Mail, Menu, Moon, Receipt, Search, Server, Settings, ShieldAlert, Target, WalletCards } from 'lucide-react';
+import { BarChart3, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, CreditCard, Flag, Gauge, Home, LineChart, LogOut, Mail, Menu, Moon, Receipt, Search, Server, Settings, ShieldAlert, Sparkles, Target, WalletCards } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { useAuth } from '../state/AuthContext.jsx';
 
 const nav = [
   ['/', 'Dashboard', Home],
+  ['/primeiros-passos', 'Primeiros Passos', Sparkles],
   ['/bancos', 'Bancos', Building2],
   ['/cartoes', 'Cartoes', CreditCard],
   ['/compras-cartao', 'Compras Cartao', CreditCard],

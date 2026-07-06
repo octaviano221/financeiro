@@ -65,4 +65,31 @@ router.get('/upcoming', authRequired, async (req, res, next) => {
   }
 });
 
+router.get('/onboarding', authRequired, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const rows = await query(
+      `SELECT
+        (SELECT COUNT(*) FROM bank_accounts WHERE user_id = :userId) AS banks,
+        (SELECT COUNT(*) FROM incomes WHERE user_id = :userId) AS incomes,
+        (SELECT COUNT(*) FROM expenses WHERE user_id = :userId) AS expenses,
+        (SELECT COUNT(*) FROM debts WHERE user_id = :userId) AS debts,
+        (SELECT COUNT(*) FROM credit_cards WHERE user_id = :userId) AS cards`,
+      { userId }
+    );
+    const counts = rows[0];
+    const steps = [
+      { id: 'bank', title: 'Cadastrar primeiro banco', path: '/bancos', done: Number(counts.banks) > 0 },
+      { id: 'income', title: 'Cadastrar primeira receita', path: '/receitas', done: Number(counts.incomes) > 0 },
+      { id: 'expense', title: 'Cadastrar primeira despesa', path: '/despesas', done: Number(counts.expenses) > 0 },
+      { id: 'debt', title: 'Cadastrar primeira divida', path: '/dividas', done: Number(counts.debts) > 0 },
+      { id: 'card', title: 'Cadastrar cartao de credito', path: '/cartoes', done: Number(counts.cards) > 0 }
+    ];
+    const completed = steps.filter((step) => step.done).length;
+    res.json({ completed, total: steps.length, progress: Math.round((completed / steps.length) * 100), steps });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
