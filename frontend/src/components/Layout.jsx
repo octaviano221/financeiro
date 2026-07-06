@@ -78,6 +78,7 @@ export function Layout() {
             </div>
             <ChevronDown size={16} />
           </div>
+          <button className="top-logout" onClick={logout}><LogOut size={17} /> Sair</button>
         </header>
         <Outlet />
       </main>
