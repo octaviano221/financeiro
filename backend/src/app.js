@@ -1,7 +1,10 @@
 import cors from 'cors';
 import express from 'express';
+import fs from 'node:fs';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import authRoutes from './routes/auth.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import crudRoutes from './routes/crud.routes.js';
@@ -16,6 +19,9 @@ import { errorHandler } from './middlewares/errorHandler.js';
 
 export function createApp() {
   const app = express();
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const frontendDist = path.resolve(__dirname, '../../frontend/dist');
 
   app.use(helmet());
   app.use(cors({ origin: process.env.FRONTEND_URL || true, credentials: true }));
@@ -34,7 +40,18 @@ export function createApp() {
   app.use('/api/password', passwordRoutes);
   app.use('/api', crudRoutes);
 
-  app.use((req, res) => res.status(404).json({ message: 'Rota nao encontrada' }));
+  if (fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(frontendDist, 'index.html'));
+    });
+  } else {
+    app.get('/', (req, res) => {
+      res.json({ message: 'API online. Frontend ainda nao foi compilado.' });
+    });
+    app.use((req, res) => res.status(404).json({ message: 'Rota nao encontrada' }));
+  }
+
   app.use(errorHandler);
 
   return app;
