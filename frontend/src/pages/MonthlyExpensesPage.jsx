@@ -3,6 +3,7 @@ import { CalendarDays, CheckCircle2, CircleDollarSign, Plus, Receipt, Repeat2, S
 import { api } from '../api/client.js';
 import { QuickCreateModal } from '../components/QuickCreateModal.jsx';
 import { resources } from '../resources.js';
+import { useToast } from '../state/ToastContext.jsx';
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -16,7 +17,10 @@ export function MonthlyExpensesPage() {
   const [data, setData] = useState(null);
   const [period, setPeriod] = useState('current');
   const [type, setType] = useState('all');
+  const [status, setStatus] = useState('all');
   const [quickOpen, setQuickOpen] = useState(false);
+  const [payingId, setPayingId] = useState(null);
+  const { showToast } = useToast();
 
   const expenseResource = useMemo(() => resources.find((resource) => resource.endpoint === 'expenses'), []);
 
@@ -29,10 +33,30 @@ export function MonthlyExpensesPage() {
     setData(response.data);
   }
 
+  async function markAsPaid(item) {
+    try {
+      setPayingId(item.id);
+      await api.post('/payments/register', {
+        target_type: 'expense',
+        target_id: item.id,
+        amount: item.amount,
+        payment_date: new Date().toISOString().slice(0, 10),
+        notes: 'Baixa realizada em Gastos Mensais'
+      });
+      showToast('Gasto marcado como pago.');
+      await load();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Nao foi possivel marcar como pago.', 'error');
+    } finally {
+      setPayingId(null);
+    }
+  }
+
   if (!data) return <section className="page">Carregando gastos mensais...</section>;
 
   const selected = data[period];
-  const visibleItems = type === 'all' ? selected.items : selected.byType[type].items;
+  const byTypeItems = type === 'all' ? selected.items : selected.byType[type].items;
+  const visibleItems = status === 'all' ? byTypeItems : byTypeItems.filter((item) => item.status === status);
 
   return (
     <section className="page">
@@ -60,6 +84,13 @@ export function MonthlyExpensesPage() {
       <div className="segmented monthly-tabs">
         <button className={period === 'current' ? 'active' : ''} onClick={() => setPeriod('current')}>Mes atual</button>
         <button className={period === 'next' ? 'active' : ''} onClick={() => setPeriod('next')}>Mes que vem</button>
+      </div>
+
+      <div className="segmented monthly-tabs">
+        <button className={status === 'all' ? 'active' : ''} onClick={() => setStatus('all')}>Todos</button>
+        <button className={status === 'aberto' ? 'active' : ''} onClick={() => setStatus('aberto')}>Aberto</button>
+        <button className={status === 'pago' ? 'active' : ''} onClick={() => setStatus('pago')}>Pago</button>
+        <button className={status === 'vencido' ? 'active' : ''} onClick={() => setStatus('vencido')}>Vencido</button>
       </div>
 
       <div className="metric-grid monthly-summary">
@@ -113,6 +144,11 @@ export function MonthlyExpensesPage() {
                   <b>{item.description}<small>{item.category} - {item.type_label}{item.recurring ? ' - mensal' : ''}</small></b>
                   <strong>{money.format(item.amount)}</strong>
                   <i className={`status-badge ${String(item.status).replaceAll('_', '-')}`}>{String(item.status).replaceAll('_', ' ')}</i>
+                  {item.status !== 'pago' && (
+                    <button className="pay-expense-button" onClick={() => markAsPaid(item)} disabled={payingId === item.id}>
+                      <CheckCircle2 size={15} /> {payingId === item.id ? 'Baixando...' : 'Marcar pago'}
+                    </button>
+                  )}
                 </div>
               );
             })}
