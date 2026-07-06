@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { BarChart3, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, CreditCard, Flag, Gauge, Home, LineChart, LogOut, Mail, Menu, Moon, Receipt, Search, Settings, ShieldAlert, Target, WalletCards } from 'lucide-react';
+import { BarChart3, Bell, Building2, CalendarDays, CheckCircle2, ChevronDown, CreditCard, Flag, Gauge, Home, LineChart, LogOut, Mail, Menu, Moon, Receipt, Search, Server, Settings, ShieldAlert, Target, WalletCards } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { useAuth } from '../state/AuthContext.jsx';
@@ -22,6 +22,7 @@ const nav = [
   ['/calendario', 'Calendario', CalendarDays],
   ['/relatorios', 'Relatorios', BarChart3],
   ['/categorias', 'Categorias', CalendarDays],
+  ['/status', 'Status', Server],
   ['/configuracoes', 'Configuracoes', Settings]
 ];
 

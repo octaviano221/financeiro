@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { useToast } from '../state/ToastContext.jsx';
+import { useConfirm } from '../state/ConfirmContext.jsx';
 
 export function SettingsPage() {
   const [settings, setSettings] = useState(null);
   const [message, setMessage] = useState('');
   const { showToast } = useToast();
+  const { confirm } = useConfirm();
 
   useEffect(() => {
     api.get('/settings').then((response) => setSettings(response.data));
@@ -32,7 +34,12 @@ export function SettingsPage() {
   }
 
   async function clearFinancialData() {
-    if (!confirm('Isso vai apagar bancos, receitas, despesas, dividas, cartoes, metas, pagamentos e alertas desta conta. Deseja continuar?')) return;
+    const ok = await confirm({
+      title: 'Limpar dados financeiros',
+      message: 'Isso vai apagar bancos, receitas, despesas, dividas, cartoes, metas, pagamentos e alertas desta conta. Seu login sera mantido.',
+      confirmText: 'Limpar dados'
+    });
+    if (!ok) return;
     try {
       await api.delete('/demo/clear');
       setMessage('Dados financeiros removidos. Sua conta continua ativa.');

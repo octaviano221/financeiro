@@ -15,6 +15,7 @@ import settingsRoutes from './routes/settings.routes.js';
 import demoRoutes from './routes/demo.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import passwordRoutes from './routes/password.routes.js';
+import systemRoutes from './routes/system.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 export function createApp() {
@@ -38,6 +39,7 @@ export function createApp() {
   app.use('/api/demo', demoRoutes);
   app.use('/api/payments', paymentRoutes);
   app.use('/api/password', passwordRoutes);
+  app.use('/api/system', systemRoutes);
   app.use('/api', crudRoutes);
 
   if (fs.existsSync(frontendDist)) {

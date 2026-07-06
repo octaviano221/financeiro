@@ -14,6 +14,7 @@ export function Dashboard() {
   const [health, setHealth] = useState(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [error, setError] = useState('');
+  const [upcoming, setUpcoming] = useState([]);
 
   useEffect(() => {
     loadDashboard();
@@ -21,11 +22,12 @@ export function Dashboard() {
 
   async function loadDashboard() {
     setError('');
-    const [summaryRes, chartsRes, alertsRes, healthRes] = await Promise.allSettled([
+    const [summaryRes, chartsRes, alertsRes, healthRes, upcomingRes] = await Promise.allSettled([
       api.get('/dashboard/summary'),
       api.get('/dashboard/charts'),
       api.get('/dashboard/alerts'),
-      api.get('/dashboard/financial-health')
+      api.get('/dashboard/financial-health'),
+      api.get('/system/upcoming')
     ]);
 
     if (summaryRes.status === 'fulfilled') {
@@ -49,6 +51,7 @@ export function Dashboard() {
     setCharts(chartsRes.status === 'fulfilled' ? chartsRes.value.data : { cashFlow: [], debts: [], expensesByCategory: [] });
     setAlerts(alertsRes.status === 'fulfilled' ? alertsRes.value.data : []);
     setHealth(healthRes.status === 'fulfilled' ? healthRes.value.data : { score: 0, classification: 'atencao', message: 'Saude financeira indisponivel enquanto o banco nao responde.' });
+    setUpcoming(upcomingRes.status === 'fulfilled' ? upcomingRes.value.data : []);
   }
 
   async function seedDemo() {
@@ -197,7 +200,20 @@ export function Dashboard() {
 
         <article className="panel">
           <div className="panel-head"><h2>Proximos vencimentos</h2><Link to="/despesas">Ver calendario</Link></div>
-          <EmptyPanel text="Cadastre despesas, faturas ou dividas com vencimento para listar aqui." compact />
+          {upcoming.length ? (
+            <div className="due-list">
+              {upcoming.map((item) => {
+                const date = new Date(`${String(item.due_date).slice(0, 10)}T00:00:00`);
+                return (
+                  <div key={`${item.type}-${item.id}`}>
+                    <b>{date.toLocaleDateString('pt-BR', { day: '2-digit' })}<small>{date.toLocaleDateString('pt-BR', { month: 'short' })}</small></b>
+                    <span>{item.description}</span>
+                    <strong>{money.format(item.amount)}</strong>
+                  </div>
+                );
+              })}
+            </div>
+          ) : <EmptyPanel text="Cadastre despesas, faturas ou dividas com vencimento para listar aqui." compact />}
         </article>
 
         <article className="panel">

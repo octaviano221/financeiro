@@ -13,6 +13,7 @@ import { SimulatorPage } from './pages/SimulatorPage.jsx';
 import { PaymentsPage } from './pages/PaymentsPage.jsx';
 import { AlertsPage } from './pages/AlertsPage.jsx';
 import { EmergencyPage } from './pages/EmergencyPage.jsx';
+import { SystemStatusPage } from './pages/SystemStatusPage.jsx';
 import { resources } from './resources.js';
 
 function PrivateRoute({ children }) {
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="pagamentos" element={<PaymentsPage />} />
         <Route path="alertas" element={<AlertsPage />} />
         <Route path="emergencia" element={<EmergencyPage />} />
+        <Route path="status" element={<SystemStatusPage />} />
         <Route path="simulador" element={<SimulatorPage />} />
         <Route path="calendario" element={<CalendarPage />} />
         <Route path="relatorios" element={<ReportsPage />} />

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Edit3, Plus, Trash2, X } from 'lucide-react';
 import { api } from '../api/client.js';
 import { useToast } from '../state/ToastContext.jsx';
+import { useConfirm } from '../state/ConfirmContext.jsx';
 import { normalizePayload } from '../utils/format.js';
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -13,6 +14,7 @@ export function ResourcePage({ resource }) {
   const [formOpen, setFormOpen] = useState(false);
   const [relationOptions, setRelationOptions] = useState({});
   const { showToast } = useToast();
+  const { confirm } = useConfirm();
 
   useEffect(() => {
     load();
@@ -63,7 +65,12 @@ export function ResourcePage({ resource }) {
   }
 
   async function remove(id) {
-    if (!confirm('Deseja excluir este registro?')) return;
+    const ok = await confirm({
+      title: 'Excluir registro',
+      message: 'Esta acao nao pode ser desfeita. Deseja excluir este registro?',
+      confirmText: 'Excluir'
+    });
+    if (!ok) return;
     try {
       await api.delete(`/${resource.endpoint}/${id}`);
       showToast('Registro excluido.');
