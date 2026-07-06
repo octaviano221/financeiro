@@ -80,9 +80,8 @@ button { border: 0; cursor: pointer; }
   border: 1px solid transparent;
 }
 .ghost-icon:hover { border-color: #e2e8f0; background: #f8fafc; }
-.alert-dot { position: relative; }
-.alert-dot::after {
-  content: "5";
+.top-icon-link { text-decoration: none; position: relative; }
+.alert-button span {
   position: absolute;
   top: 3px;
   right: 2px;
@@ -94,6 +93,7 @@ button { border: 0; cursor: pointer; }
   font-size: 10px;
   line-height: 16px;
   font-weight: 900;
+  text-align: center;
 }
 .top-search {
   width: min(420px, 36vw);
@@ -108,7 +108,18 @@ button { border: 0; cursor: pointer; }
   margin-left: auto;
 }
 .top-search input { border: 0; padding: 0; outline: 0; }
-.user-chip { display: flex; align-items: center; gap: 10px; min-width: 168px; }
+.user-menu-wrap { position: relative; }
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 168px;
+  background: transparent;
+  color: #111827;
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+.user-chip:hover { background: #f8fafc; }
 .user-chip strong { font-size: 13px; }
 .user-chip span { font-size: 11px; }
 .avatar {
@@ -131,6 +142,35 @@ button { border: 0; cursor: pointer; }
   padding: 10px 12px;
   font-weight: 900;
 }
+.user-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 220px;
+  background: #fff;
+  border: 1px solid #e5eaf1;
+  border-radius: 8px;
+  box-shadow: 0 18px 46px rgba(15, 23, 42, .14);
+  padding: 8px;
+  z-index: 1200;
+}
+.user-menu a,
+.user-menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: transparent;
+  color: #334155;
+  text-decoration: none;
+  font-weight: 800;
+  text-align: left;
+}
+.user-menu a:hover,
+.user-menu button:hover { background: #edf5ff; color: #2563eb; }
+.user-menu button:last-child { color: #991b1b; }
 .pill { background: #e8f0ff; color: #1d4ed8; padding: 8px 12px; border-radius: 999px; font-weight: 700; }
 .page { padding: 24px 28px; }
 .page-title { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; margin-bottom: 22px; }
