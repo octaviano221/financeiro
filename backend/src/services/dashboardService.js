@@ -43,7 +43,7 @@ export async function getFinancialSnapshot(userId) {
   const commitment = monthlyIncome > 0 ? ((monthlyExpenses + debtInstallments + totalCardOpen) / monthlyIncome) * 100 : 0;
   const cardUsage = totalCardLimit > 0 ? (cards.reduce((sum, item) => sum + toNumber(item.used_limit), 0) / totalCardLimit) * 100 : 0;
   const expectedMonthlyBalance = monthlyIncome - monthlyExpenses - debtInstallments - totalCardOpen;
-  const projectedCashBalance = totalBankBalance + pendingIncome - openExpenses - debtInstallments - totalCardOpen;
+  const projectedCashBalance = expectedMonthlyBalance;
   const essentialOutflow = openExpenses + debtInstallments + totalCardOpen;
   const freeToSpend = Math.max(0, projectedCashBalance);
   const daysLeft = daysRemainingInMonth();

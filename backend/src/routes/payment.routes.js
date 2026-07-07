@@ -49,6 +49,15 @@ router.post('/register', async (req, res, next) => {
         { amount: paidAmount, id: target_id, userId: req.user.id }
       );
     } else if (target_type === 'card_transaction') {
+      await connection.execute(
+        `UPDATE credit_cards cc
+         JOIN card_transactions ct ON ct.credit_card_id = cc.id AND ct.user_id = cc.user_id
+         SET cc.current_invoice_value = GREATEST(0, cc.current_invoice_value - :amount),
+             cc.used_limit = GREATEST(0, cc.used_limit - :amount),
+             cc.status = CASE WHEN GREATEST(0, cc.current_invoice_value - :amount) = 0 THEN 'paga' ELSE cc.status END
+         WHERE ct.id = :id AND ct.user_id = :userId`,
+        { amount: paidAmount, id: target_id, userId: req.user.id }
+      );
       await connection.execute('UPDATE card_transactions SET status = "paga" WHERE id = :id AND user_id = :userId', { id: target_id, userId: req.user.id });
     } else {
       throw httpError(400, 'Tipo de pagamento invalido');

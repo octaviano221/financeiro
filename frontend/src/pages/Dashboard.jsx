@@ -191,7 +191,7 @@ export function Dashboard() {
           <div>
             <small>Falta pagar</small>
             <strong>{money.format(summary.essentialOutflow || 0)}</strong>
-            <em>{money.format(summary.openExpenses || 0)} em contas abertas</em>
+            <em>contas, parcelas e cartao do mes</em>
           </div>
           <div>
             <small>Previsao final</small>

@@ -43,7 +43,7 @@ export function MonthlyExpensesPage() {
     try {
       setPayingId(item.id);
       await api.post('/payments/register', {
-        target_type: 'expense',
+        target_type: item.source_type === 'card_transaction' ? 'card_transaction' : 'expense',
         target_id: item.id,
         amount: item.amount,
         payment_date: new Date().toISOString().slice(0, 10),
@@ -168,9 +168,11 @@ export function MonthlyExpensesPage() {
                       <CheckCircle2 size={15} /> {payingId === item.id ? 'Baixando...' : 'Marcar pago'}
                     </button>
                   )}
-                  <button className="repeat-expense-button" onClick={() => duplicateNextMonth(item)} disabled={duplicatingId === item.id}>
-                    <CopyPlus size={15} /> {duplicatingId === item.id ? 'Repetindo...' : 'Mes que vem'}
-                  </button>
+                  {item.source_type !== 'card_transaction' && (
+                    <button className="repeat-expense-button" onClick={() => duplicateNextMonth(item)} disabled={duplicatingId === item.id}>
+                      <CopyPlus size={15} /> {duplicatingId === item.id ? 'Repetindo...' : 'Mes que vem'}
+                    </button>
+                  )}
                 </div>
               );
             })}

@@ -69,7 +69,7 @@ router.get('/upcoming', authRequired, async (req, res, next) => {
 router.get('/next-month-payables', authRequired, async (req, res, next) => {
   try {
     const { start, end, year, month } = nextMonthRange();
-    const [expenses, debts, cards] = await Promise.all([
+    const [expenses, debts, cardTransactions] = await Promise.all([
       query(
         `SELECT e.id, e.description, e.amount, e.due_date, e.is_recurring, e.recurrence_type, e.status, c.name AS category_name
          FROM expenses e
@@ -89,10 +89,14 @@ router.get('/next-month-payables', authRequired, async (req, res, next) => {
         { userId: req.user.id, start, end }
       ),
       query(
-        `SELECT id, card_name AS description, current_invoice_value AS amount, due_day, status
-         FROM credit_cards
-         WHERE user_id = :userId AND status <> 'paga' AND current_invoice_value > 0`,
-        { userId: req.user.id }
+        `SELECT ct.id, ct.description, ct.amount, ct.purchase_date AS due_date, ct.status,
+                ct.installments, ct.current_installment, cc.card_name
+         FROM card_transactions ct
+         LEFT JOIN credit_cards cc ON cc.id = ct.credit_card_id AND cc.user_id = ct.user_id
+         WHERE ct.user_id = :userId
+           AND ct.status = 'aberta'
+           AND ct.purchase_date BETWEEN :start AND :end`,
+        { userId: req.user.id, start, end }
       )
     ]);
 
@@ -116,14 +120,14 @@ router.get('/next-month-payables', authRequired, async (req, res, next) => {
       recurring: false,
       status: debt.status
     }));
-    const cardItems = cards.map((card) => ({
-      type: 'card',
+    const cardItems = cardTransactions.map((card) => ({
+      type: 'card_transaction',
       id: card.id,
-      description: card.description,
+      description: `${card.description} (${card.current_installment}/${card.installments})`,
       category: 'Cartao',
       amount: roundMoney(toNumber(card.amount)),
-      due_date: dateForDay(year, month, Number(card.due_day || 1)),
-      recurring: true,
+      due_date: String(card.due_date).slice(0, 10),
+      recurring: false,
       status: card.status
     }));
 
@@ -231,7 +235,8 @@ router.get('/onboarding', authRequired, async (req, res, next) => {
 export default router;
 
 async function listMonthExpenses(userId, range) {
-  return query(
+  const [expenses, cardTransactions] = await Promise.all([
+    query(
     `SELECT e.id, e.description, e.amount, e.due_date, e.payment_date, e.is_recurring, e.recurrence_type, e.status, c.name AS category_name
      FROM expenses e
      LEFT JOIN categories c ON c.id = e.category_id AND c.user_id = e.user_id
@@ -242,27 +247,49 @@ async function listMonthExpenses(userId, range) {
          OR (e.is_recurring = TRUE AND e.recurrence_type = 'mensal' AND e.due_date <= :end)
        )
      ORDER BY e.due_date ASC, e.created_at DESC`,
-    { userId, start: range.start, end: range.end }
-  );
+      { userId, start: range.start, end: range.end }
+    ),
+    query(
+      `SELECT ct.id, ct.description, ct.amount, ct.purchase_date AS due_date, NULL AS payment_date,
+              FALSE AS is_recurring, NULL AS recurrence_type, ct.status, c.name AS category_name,
+              ct.installments, ct.current_installment, cc.card_name
+       FROM card_transactions ct
+       LEFT JOIN categories c ON c.id = ct.category_id AND c.user_id = ct.user_id
+       LEFT JOIN credit_cards cc ON cc.id = ct.credit_card_id AND cc.user_id = ct.user_id
+       WHERE ct.user_id = :userId
+         AND ct.status <> 'cancelada'
+         AND ct.purchase_date BETWEEN :start AND :end
+       ORDER BY ct.purchase_date ASC, ct.created_at DESC`,
+      { userId, start: range.start, end: range.end }
+    )
+  ]);
+
+  return [
+    ...expenses.map((item) => ({ ...item, source_type: 'expense' })),
+    ...cardTransactions.map((item) => ({ ...item, source_type: 'card_transaction' }))
+  ].sort((a, b) => String(a.due_date).localeCompare(String(b.due_date)));
 }
 
 function formatMonthlyExpense(item, range) {
   const type = classifyExpense(item);
+  const isCardTransaction = item.source_type === 'card_transaction';
   return {
     id: item.id,
-    description: item.description,
+    source_type: item.source_type || 'expense',
+    description: isCardTransaction ? `${item.description} (${item.current_installment}/${item.installments})` : item.description,
     amount: roundMoney(toNumber(item.amount)),
-    due_date: item.is_recurring ? dateForDay(range.year, range.month, dayOfMonth(item.due_date)) : String(item.due_date).slice(0, 10),
+    due_date: item.is_recurring && !isCardTransaction ? dateForDay(range.year, range.month, dayOfMonth(item.due_date)) : String(item.due_date).slice(0, 10),
     payment_date: item.payment_date ? String(item.payment_date).slice(0, 10) : null,
-    category: item.category_name || 'Sem categoria',
+    category: isCardTransaction ? (item.card_name || 'Cartao') : (item.category_name || 'Sem categoria'),
     type,
     type_label: { fixed: 'Fixo', variable: 'Variavel', extra: 'Extra' }[type],
-    recurring: Boolean(item.is_recurring),
+    recurring: Boolean(item.is_recurring && !isCardTransaction),
     status: item.status
   };
 }
 
 function classifyExpense(item) {
+  if (item.source_type === 'card_transaction') return 'variable';
   if (item.is_recurring && item.recurrence_type === 'mensal') return 'fixed';
   const text = `${item.category_name || ''} ${item.description || ''}`.toLowerCase();
   if (['mercado', 'alimentacao', 'combustivel', 'transporte', 'farmacia', 'saude', 'manutencao'].some((word) => text.includes(word))) return 'variable';
